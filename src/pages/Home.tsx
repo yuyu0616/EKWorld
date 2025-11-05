@@ -1,6 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { Card, CardActionArea } from '@mui/material';
 import { useState } from 'react';
+import { isMobile } from 'react-device-detect';
+import './../css/App.css';
+import './../css/Home.css';
 
 function Home() {
     const navigate = useNavigate();
@@ -17,33 +20,59 @@ function Home() {
     }
 
     return (
-        <>
-            {
-                [
-                    { name: "ルーレット", link: "/roulette" }
-                ].map((m, i) => {
-                    return (
-                        <Card
-                            className={isMenuClick === null ? '' : isMenuClick !== i ? 'home-menu' : ''}
-                            onClick={() => {
-                                setMenuClick(i);
-                                animationDelay(() => handleClick(m.link))
-                            }}
-                            key={`menu_${m.name}`}
-                        >
-                            <CardActionArea
-                                style={{
-                                    ...cardAreaStyle
+        <div
+            className="body"
+        >
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    padding: 8,
+                }}
+            >
+                {
+                    [
+                        { name: "ルーレット", link: "/roulette" }
+                    ].map((m, i) => {
+                        return (
+                            <Card
+                                className={isMenuClick === null ? '' : isMenuClick !== i ? 'home-menu' : ''}
+                                onClick={() => {
+                                    setMenuClick(i);
+                                    animationDelay(() => handleClick(m.link))
                                 }}
-                                onClick={() => handleClick(m.link)}>
-                                {m.name}
-                            </CardActionArea>
-                        </Card>
-                    )
-                })
-            }
-        </>
+                                style={{
+                                    ...cardStyle
+                                }}
+                                key={`menu_${m.name}`}
+                            >
+                                <CardActionArea
+                                    style={{
+                                        ...cardAreaStyle
+                                    }}
+                                    onClick={() => handleClick(m.link)}>
+                                    {m.name}
+                                </CardActionArea>
+                            </Card>
+                        )
+                    })
+                }
+            </div>
+        </div>
     );
+}
+
+const cardStyle: React.CSSProperties = {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    width: isMobile ? "100%" : "30%",
+    height: 128,
+    maxWidth: 256,
+    minWidth: 256,
+    margin: 8,
+    fontSize: 24,
+    fontWeight: "bold",
 }
 
 const cardAreaStyle: React.CSSProperties = {
