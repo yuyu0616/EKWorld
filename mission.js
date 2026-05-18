@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { text: "7. ストリンガー種で8キル", points: 5 },
         { text: "8. ノヴァブラスターで8キル", points: 5 },
         { text: "9. ホクサイで8キル", points: 5 },
-        { text: "10. シェルター種で12キル", points: 50 },
+        { text: "10. シェルター種で12キル", points: 50, isSecret: true }, // シークレットミッションに設定
         { text: "個人ミッションクリアボーナス", points: 5 }
     ];
 
@@ -49,17 +49,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const item = document.createElement('div');
         item.className = 'mission-item';
 
+        // 秘密ミッション用の状態
+        let clickCount = 0;
+        let isRevealed = !mission.isSecret;
+
         // ミッションテキストとポイント
         const textWrapper = document.createElement('div');
         textWrapper.className = 'mission-text-wrapper';
 
         const title = document.createElement('span');
         title.className = 'mission-title';
-        title.textContent = mission.text;
+        title.textContent = isRevealed ? mission.text : "???";
 
         const pts = document.createElement('span');
         pts.className = 'mission-points';
-        pts.textContent = `${mission.points} pt`;
+        pts.textContent = isRevealed ? `${mission.points} pt` : `? pt`;
 
         textWrapper.appendChild(title);
         textWrapper.appendChild(pts);
@@ -74,6 +78,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // クリック/タップでチェック状態とポイント切り替え
         item.addEventListener('click', () => {
+            // シークレットミッションの解放処理
+            if (!isRevealed) {
+                clickCount++;
+                if (clickCount >= 15) {
+                    isRevealed = true;
+                    title.textContent = mission.text;
+                    pts.textContent = `${mission.points} pt`;
+                    item.classList.add('revealed-anim');
+                    // アニメーション終了後にクラスを消す
+                    setTimeout(() => item.classList.remove('revealed-anim'), 600);
+                } else {
+                    item.classList.remove('shake-anim');
+                    void item.offsetWidth; // リフロー強制でアニメーション再トリガー
+                    item.classList.add('shake-anim');
+                }
+                return; // ここで処理を止めて、まだチェックはつけない
+            }
+
+            // 通常のチェック処理
             const isChecked = item.classList.toggle('checked');
 
             // ポイントの増減

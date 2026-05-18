@@ -409,3 +409,24 @@ canvas {
         font-size: 24px;
     }
 }
+
+/* シークレットミッション用アニメーション */
+.shake-anim {
+    animation: shake 0.2s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+}
+
+.revealed-anim {
+    animation: reveal 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes reveal {
+    0% { transform: scale(0.95); background-color: var(--accent); }
+    50% { transform: scale(1.05); background-color: var(--accent); }
+    100% { transform: scale(1); background-color: var(--white); }
+}
