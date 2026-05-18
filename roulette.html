@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ルーレット - EKWorld</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <a href="index.html" class="back-btn">← メニューへ戻る</a>
+    <div id="app">
+        <!-- Roulette UI -->
+        <div class="roulette-container">
+            <div class="canvas-wrapper">
+                <canvas id="rouletteCanvas" width="400" height="400"></canvas>
+                <div class="pin"></div>
+            </div>
+            
+            <button id="spinBtn" class="btn spin-btn">回す！</button>
+            <button id="resetBtn" class="btn reset-btn">リセット</button>
+            
+            <p id="resultText" class="result-text hidden">
+                🎯 結果：<span id="resultValue" class="result-value"></span>
+            </p>
+        </div>
+    </div>
+    <script src="main.js"></script>
+  </body>
+</html>
