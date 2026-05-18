@@ -1,0 +1,13 @@
+{
+  "name": "my-netlify-project",
+  "version": "1.0.0",
+  "description": "Simple HTML deployment to Netlify",
+  "main": "index.html",
+  "scripts": {
+    "start": "browser-sync start --server --files '*.html, *.css'",
+    "build": "echo 'No build step required for static HTML'"
+  },
+  "devDependencies": {
+    "browser-sync": "^3.0.0"
+  }
+}
