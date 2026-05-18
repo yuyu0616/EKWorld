@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const missionData = [
         { text: "1. ヒッセンで10キル（みみゅは12キル）", points: 5 },
         { text: "2. ヴァリアブルで8キル（エクリオは18キル）", points: 5 },
-        { text: "3. スパッタリで8キル（赤木秋は18キル）", points: 5 },
+        { text: "3. スパッタリーで8キル（赤木秋は18キル）", points: 5 },
         { text: "4. クーゲルで7キル（しゃろは15キル）", points: 5 },
         { text: "5. チャージャー種で10キル", points: 5 },
         { text: "6. スプラシューターで8キル", points: 5 },
