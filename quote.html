@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>今日の名言 - EKWorld</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <a href="index.html" class="back-btn">← メニューへ戻る</a>
+    <div id="app">
+        <h1>今日のアニメ名言</h1>
+        <div class="quote-container">
+            <div id="content-loader" class="content-loader">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+            <div id="quoteCard" class="quote-card pop-card hidden">
+                <p id="quoteText" class="quote-text"></p>
+                <p id="quoteAuthor" class="quote-author"></p>
+                <p id="quoteWork" class="quote-work"></p>
+            </div>
+        </div>
+    </div>
+    <script src="quote.js"></script>
+  </body>
+</html>
