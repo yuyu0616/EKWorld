@@ -1,5 +1,5 @@
 // スプレッドシートをAPI化したURL（Google Apps ScriptのウェブアプリURLなど）を設定してください
-const SPREADSHEET_API_URL = "https://script.google.com/macros/s/AKfycbxC87f_4sC-tu3Go-6EB_Vl5z36fOlwaEgfONpiVpHtZX4gFcOyNnOYOL3xwDLCSi30/exec";
+const SPREADSHEET_API_URL = "https://script.google.com/macros/s/AKfycbzZDKOrbmH8A-8SoxcCbZq6dIiZEZK28co1gXepUx02DSN1XG3h8l15aZQvWej9lFuN/exec";
 
 async function fetchQuotes() {
     try {
@@ -7,8 +7,7 @@ async function fetchQuotes() {
         if (SPREADSHEET_API_URL === "SPREADSHEET_API_URL") {
             console.warn("APIのURLが設定されていません。デフォルトの名言を表示します。");
             return [
-                { text: "明日死ぬかのように生きよ。永遠に生きるかのように学べ。", author: "マハトマ・ガンジー", work: "" },
-                { text: "天才とは、1％のひらめきと99％の努力である。", author: "トーマス・エジソン", work: "" },
+                { text: "諦めたらそこで試合終了だよ", author: "安西先生", work: "スラムダンク" },
             ];
         }
 
