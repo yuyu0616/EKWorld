@@ -59,8 +59,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const todaysQuote = quotes[index];
 
     // 名言と発言者を表示
-    quoteText.textContent = `「${todaysQuote.text}」`;
-    quoteAuthor.textContent = `- ${todaysQuote.author}`;
+    quoteText.textContent = `${todaysQuote.text}`;
+    quoteAuthor.textContent = `${todaysQuote.author}`;
 
     // 作品名があれば表示、なければ非表示
     if (todaysQuote.work) {
