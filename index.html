@@ -1,13 +1,36 @@
 <!doctype html>
 <html lang="ja">
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EKWorld - メニュー</title>
+    <title>EKWorld</title>
     <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
+</head>
+
+<body>
+    <!-- ローディングアニメーション -->
+    <div id="loader-overlay">
+        <div class="loader-content">
+            <div class="loader-text">
+                <span style="--i:1;">e</span>
+                <span style="--i:2;">k</span>
+                <span style="--i:3;">u</span>
+                <span style="--i:4;">r</span>
+                <span style="--i:5;">i</span>
+                <span style="--i:6;">o</span>
+                <span style="--i:7;">　</span>
+                <span style="--i:8;">w</span>
+                <span style="--i:9;">o</span>
+                <span style="--i:10;">r</span>
+                <span style="--i:11;">l</span>
+                <span style="--i:12;">d</span>
+                <span style="--i:13;">!</span>
+            </div>
+        </div>
+    </div>
+
     <div id="app">
         <div class="menu-container">
             <a href="roulette.html" class="menu-card">
@@ -19,5 +42,19 @@
             <!-- 今後コンテンツが増えたらここに追加 -->
         </div>
     </div>
-  </body>
+
+    <script>
+        window.addEventListener('load', () => {
+            const loader = document.getElementById('loader-overlay');
+            // 少し遅延を入れてアニメーションを見せる
+            setTimeout(() => {
+                loader.classList.add('loaded');
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                }, 500); // フェードアウトの時間
+            }, 800);
+        });
+    </script>
+</body>
+
 </html>

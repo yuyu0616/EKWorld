@@ -1,7 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800&display=swap');
 
 :root {
-    --bg-color: #fdf2f8; /* very light pink */
+    --bg-color: #fdf2f8;
+    /* very light pink */
     --text-color: #333333;
     --primary: #ff5e7e;
     --primary-dark: #cc4b64;
@@ -15,13 +16,11 @@ body {
     font-family: 'M PLUS Rounded 1c', sans-serif;
     background-color: #f1f5f9;
     /* スプラトゥーン風のスタイリッシュな斜めストライプ（うるさすぎないデザイン） */
-    background-image: repeating-linear-gradient(
-        -45deg,
-        transparent,
-        transparent 20px,
-        rgba(0, 0, 0, 0.03) 20px,
-        rgba(0, 0, 0, 0.03) 40px
-    );
+    background-image: repeating-linear-gradient(-45deg,
+            transparent,
+            transparent 20px,
+            rgba(0, 0, 0, 0.03) 20px,
+            rgba(0, 0, 0, 0.03) 40px);
     color: var(--text-color);
     display: flex;
     justify-content: center;
@@ -31,7 +30,7 @@ body {
 h1 {
     font-size: 2.5rem;
     color: var(--primary);
-    text-shadow: 2px 2px 0px var(--white), 4px 4px 0px rgba(0,0,0,0.1);
+    text-shadow: 2px 2px 0px var(--white), 4px 4px 0px rgba(0, 0, 0, 0.1);
     margin-bottom: 30px;
     text-align: center;
     letter-spacing: 2px;
@@ -138,7 +137,7 @@ canvas {
     height: 100%;
     border-radius: 50%;
     border: 6px solid var(--text-color);
-    box-shadow: 8px 8px 0px rgba(0,0,0,0.15);
+    box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.15);
     background-color: var(--white);
     box-sizing: border-box;
 }
@@ -153,7 +152,7 @@ canvas {
     border-left: 15px solid transparent;
     border-right: 15px solid transparent;
     border-top: 35px solid var(--accent);
-    filter: drop-shadow(2px 4px 0px rgba(0,0,0,0.2));
+    filter: drop-shadow(2px 4px 0px rgba(0, 0, 0, 0.2));
     z-index: 10;
 }
 
@@ -172,8 +171,15 @@ canvas {
 }
 
 @keyframes popIn {
-    0% { transform: scale(0.8); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 .result-value {
@@ -199,7 +205,8 @@ canvas {
 }
 
 .menu-card {
-    flex: 1 1 250px; /* Responsive sizing */
+    flex: 1 1 250px;
+    /* Responsive sizing */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -221,8 +228,11 @@ canvas {
 .menu-card::before {
     content: "";
     position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 100%);
     pointer-events: none;
 }
 
@@ -270,7 +280,8 @@ canvas {
 }
 
 .mission-item.checked {
-    background-color: #2d3748; /* 黒背景でネオンカラーを際立たせる */
+    background-color: #2d3748;
+    /* 黒背景でネオンカラーを際立たせる */
     color: var(--white);
     text-decoration: line-through;
     text-decoration-thickness: 3px;
@@ -289,15 +300,17 @@ canvas {
 .squid-icon {
     width: 100%;
     height: 100%;
-    color: #cbd5e1; /* チェック前はグレー */
+    color: #cbd5e1;
+    /* チェック前はグレー */
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     transform: scale(0.9);
 }
 
 .mission-item.checked .squid-icon {
-    color: var(--primary); /* jsでランダム上書きされる */
+    color: var(--primary);
+    /* jsでランダム上書きされる */
     transform: scale(1.3) rotate(15deg);
-    filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.5));
+    filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5));
 }
 
 /* ミッションテキストとポイントのレイアウト */
@@ -362,9 +375,17 @@ canvas {
 }
 
 @keyframes bounce {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.4); }
-    100% { transform: scale(1); }
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.4);
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }
 
 /* スマホ向けレスポンシブ調整 */
@@ -373,7 +394,7 @@ canvas {
         font-size: 2rem;
         margin-top: 40px;
     }
-    
+
     .back-btn {
         top: 10px;
         left: 10px;
@@ -394,17 +415,17 @@ canvas {
         font-size: 16px;
         padding: 14px 16px;
     }
-    
+
     .icon-wrapper {
         width: 30px;
         height: 30px;
     }
-    
+
     .result-text {
         font-size: 20px;
         padding: 12px 20px;
     }
-    
+
     .result-value {
         font-size: 24px;
     }
@@ -416,9 +437,19 @@ canvas {
 }
 
 @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-4px); }
-    75% { transform: translateX(4px); }
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-4px);
+    }
+
+    75% {
+        transform: translateX(4px);
+    }
 }
 
 .revealed-anim {
@@ -426,7 +457,83 @@ canvas {
 }
 
 @keyframes reveal {
-    0% { transform: scale(0.95); background-color: var(--accent); }
-    50% { transform: scale(1.05); background-color: var(--accent); }
-    100% { transform: scale(1); background-color: var(--white); }
+    0% {
+        transform: scale(0.95);
+        background-color: var(--accent);
+    }
+
+    50% {
+        transform: scale(1.05);
+        background-color: var(--accent);
+    }
+
+    100% {
+        transform: scale(1);
+        background-color: var(--white);
+    }
+}
+
+/* --- ローディングアニメーション --- */
+#loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--primary);
+    /* スプラトゥーンらしいポップなピンク */
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+}
+
+#loader-overlay.loaded {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.loader-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.loader-text {
+    font-size: clamp(40px, 12vw, 80px);
+    font-weight: 900;
+    color: var(--white);
+    letter-spacing: 4px;
+    -webkit-text-stroke: 4px var(--text-color);
+    text-shadow: 8px 8px 0px var(--text-color);
+    display: flex;
+    gap: 2px;
+    transform: rotate(-5deg);
+}
+
+.loader-text span {
+    display: inline-block;
+    animation: popBounceLetter 1.2s infinite cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation-delay: calc(0.1s * var(--i));
+    /* Give letters a random-looking initial slight rotation */
+}
+
+.loader-text span:nth-child(even) {
+    transform-origin: bottom center;
+}
+
+@keyframes popBounceLetter {
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(0deg) scale(1);
+        color: var(--white);
+    }
+
+    50% {
+        transform: translateY(-25px) rotate(12deg) scale(1.15);
+        color: var(--accent);
+    }
 }
