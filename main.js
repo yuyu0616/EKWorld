@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         "ラスト20秒メイン使用禁止",
         "ラスト20秒納品禁止",
         "ノルマ達成後オオモノ討伐禁止",
+        "１waveで3デスする"
     ];
 
     const colors = [
