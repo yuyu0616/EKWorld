@@ -4,7 +4,7 @@
   "description": "Simple HTML deployment to Netlify",
   "main": "index.html",
   "scripts": {
-    "start": "browser-sync start --server --files '*.html, *.css'",
+    "start": "browser-sync start --server --no-ghost-mode --files '*.html, *.css'",
     "build": "echo 'No build step required for static HTML'"
   },
   "devDependencies": {

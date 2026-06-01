@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ito (イト) - EKWorld</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .ito-container {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 40px;
+        }
+        .ito-card {
+            background-color: var(--white);
+            border: 4px solid var(--text-color);
+            border-radius: 20px;
+            box-shadow: 6px 6px 0px var(--text-color);
+            padding: 30px;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            font-weight: 800;
+            font-size: 18px;
+            color: var(--text-color);
+        }
+        .ito-input {
+            padding: 12px 16px;
+            border: 3px solid var(--text-color);
+            border-radius: 12px;
+            font-size: 18px;
+            font-family: inherit;
+            box-shadow: inset 2px 2px 0px rgba(0,0,0,0.1);
+        }
+        .ito-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 94, 126, 0.3);
+        }
+        .player-list {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .player-chip {
+            background-color: var(--accent);
+            padding: 8px 16px;
+            border-radius: 50px;
+            border: 2px solid var(--text-color);
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .my-card-display {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .my-card-number {
+            font-size: 80px;
+            font-weight: 900;
+            color: var(--primary);
+            text-shadow: 3px 3px 0px var(--text-color);
+            line-height: 1;
+        }
+        .my-card-label {
+            font-weight: 800;
+            font-size: 20px;
+            color: var(--text-color);
+        }
+        .played-cards-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin: 20px 0;
+            min-height: 120px;
+            padding: 20px;
+            background-color: #f8fafc;
+            border-radius: 16px;
+            border: 3px dashed #cbd5e1;
+        }
+        .played-card {
+            background-color: var(--white);
+            border: 3px solid var(--text-color);
+            border-radius: 12px;
+            width: 60px;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 3px 3px 0px var(--text-color);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .played-card-number {
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--primary);
+        }
+        .played-card-player {
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--text-color);
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            width: 100%;
+            text-align: center;
+        }
+        .theme-display {
+            background-color: var(--secondary);
+            color: var(--white);
+            padding: 16px;
+            border-radius: 16px;
+            border: 3px solid var(--text-color);
+            box-shadow: 4px 4px 0px var(--text-color);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .theme-label {
+            font-size: 14px;
+            font-weight: 800;
+            opacity: 0.9;
+        }
+        .theme-text {
+            font-size: 24px;
+            font-weight: 900;
+            margin-top: 4px;
+        }
+        .info-text {
+            text-align: center;
+            font-weight: 800;
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+        .lives-display {
+            display: none;
+        }
+        .sync-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 12px;
+            font-weight: 800;
+            background: var(--white);
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 2px solid var(--text-color);
+            opacity: 0.7;
+        }
+        .syncing .sync-status {
+            color: var(--primary);
+            opacity: 1;
+        }
+        .result-banner {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 900;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 20px;
+            border: 4px solid var(--text-color);
+            color: var(--white);
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.2);
+        }
+        .result-banner.success {
+            background-color: #4ade80;
+            box-shadow: 6px 6px 0px #16a34a;
+        }
+        .result-banner.fail {
+            background-color: #ef4444;
+            box-shadow: 6px 6px 0px #b91c1c;
+        }
+        .buttons-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-btn">← もどる</a>
+    
+    <div id="app">
+        <h1>ito (イト)</h1>
+        
+        <div class="ito-container" id="ito-container">
+            <!-- 画面はJavaScriptで動的に切り替えます -->
+        </div>
+    </div>
+
+    <!-- 画面テンプレート: ロビー -->
+    <template id="tpl-lobby">
+        <div class="ito-card">
+            <h2 style="text-align:center; color: var(--primary); margin-top:0;">ルームに入る</h2>
+            <div class="input-group">
+                <label for="playerName">あなたの名前</label>
+                <input type="text" id="playerName" class="ito-input" placeholder="例: スライム">
+            </div>
+            <div class="input-group">
+                <label for="roomId">ルームID (合言葉)</label>
+                <input type="text" id="roomId" class="ito-input" placeholder="例: ekworld123">
+            </div>
+            <button class="btn" style="width: 100%; background-color: var(--primary);" onclick="itoApp.joinRoom()">入室する / 作成する</button>
+        </div>
+    </template>
+
+    <!-- 画面テンプレート: 待機室 -->
+    <template id="tpl-waiting">
+        <div class="theme-display" style="background-color: var(--white); color: var(--text-color);">
+            <div class="theme-label">ルームID</div>
+            <div class="theme-text" id="display-room-id" style="color: var(--primary);"></div>
+        </div>
+        
+        <div class="ito-card">
+            <h3>参加しているプレイヤー</h3>
+            <ul class="player-list" id="waiting-players"></ul>
+            
+            <div style="margin-top: 30px; border-top: 2px dashed #cbd5e1; padding-top: 20px;">
+                <div class="input-group">
+                    <label for="themeInput">お題 (テーマ)</label>
+                    <input type="text" id="themeInput" class="ito-input" placeholder="例: 無人島に持っていきたいもの">
+                </div>
+                <button class="btn" style="width: 100%; background-color: var(--secondary);" onclick="itoApp.startGame()">このお題でゲームスタート！</button>
+            </div>
+        </div>
+    </template>
+
+    <!-- 画面テンプレート: プレイ画面 -->
+    <template id="tpl-playing">
+        <div class="theme-display">
+            <div class="theme-label">お題</div>
+            <div class="theme-text" id="display-theme"></div>
+        </div>
+        
+        <div class="ito-card">
+            <div class="my-card-display">
+                <div class="my-card-label">あなたのカード</div>
+                <div class="my-card-number" id="my-card-number">?</div>
+            </div>
+            
+            <button class="btn" id="play-card-btn" style="width: 100%; background-color: var(--primary);" onclick="itoApp.playCard()">カードを場に出す！</button>
+        </div>
+        
+        <div class="ito-card">
+            <h3>場に出たカード</h3>
+            <div class="played-cards-area" id="played-cards-area"></div>
+            <div class="info-text" id="play-status-text"></div>
+        </div>
+    </template>
+
+    <!-- 画面テンプレート: リザルト画面 -->
+    <template id="tpl-result">
+        <div class="theme-display">
+            <div class="theme-label">お題</div>
+            <div class="theme-text" id="result-theme"></div>
+        </div>
+        
+        <div class="ito-card">
+            <div id="result-banner" class="result-banner"></div>
+            
+            <h3>全員のカード</h3>
+            <div class="played-cards-area" id="result-cards-area"></div>
+            
+            <div style="margin-top: 30px;">
+                <button class="btn" style="width: 100%; background-color: var(--secondary);" onclick="itoApp.resetGame()">もう一度遊ぶ</button>
+            </div>
+        </div>
+    </template>
+
+    <div class="sync-status" id="sync-status">同期中...</div>
+
+    <script src="ito.js"></script>
+</body>
+</html>
