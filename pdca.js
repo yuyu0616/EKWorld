@@ -1,3 +1,5 @@
+const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyTAbaT2TaWPxs05F3pDDKWiAw4bNUYMJHXoEqU8h6xWvaoAhvth3Ms3bv05jP2Zwyl/exec';
+
 document.addEventListener('DOMContentLoaded', () => {
     // Elements: PDCA
     const goalInput = document.getElementById('goalInput');
@@ -17,6 +19,65 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearBtn = document.getElementById('clearBtn');
     const toast = document.getElementById('toast');
 
+    // Elements: Tabs
+    const modeTabs = document.querySelectorAll('.mode-tab');
+    const modeContents = document.querySelectorAll('.mode-content');
+
+    // Elements: Edit/Display Toggle
+    const editModeToggle = document.getElementById('editModeToggle');
+    const editLabelText = document.getElementById('editLabelText');
+    const displayElements = {
+        goal: document.getElementById('goalDisplay'),
+        plan: document.getElementById('planDisplay'),
+        do: document.getElementById('doDisplay'),
+        check: document.getElementById('checkDisplay'),
+        act: document.getElementById('actDisplay')
+    };
+    const inputElements = {
+        goal: goalInput,
+        plan: planInput,
+        do: doInput,
+        check: checkInput,
+        act: actInput
+    };
+    const actionsContainer = document.querySelector('.actions');
+
+    // Mode Switch Logic
+    modeTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            modeTabs.forEach(t => t.classList.remove('active'));
+            modeContents.forEach(c => c.classList.remove('active'));
+            
+            tab.classList.add('active');
+            const targetMode = tab.getAttribute('data-mode');
+            document.getElementById(targetMode).classList.add('active');
+        });
+    });
+
+    // Edit Mode Toggle Logic
+    const updateEditMode = () => {
+        const isEditMode = editModeToggle.checked;
+        editLabelText.style.color = isEditMode ? 'var(--primary)' : 'var(--text-color)';
+        editLabelText.previousElementSibling.previousElementSibling.style.color = isEditMode ? 'var(--text-color)' : 'var(--primary)';
+
+        for (const key in inputElements) {
+            if (isEditMode) {
+                inputElements[key].classList.remove('hidden');
+                displayElements[key].classList.add('hidden');
+            } else {
+                inputElements[key].classList.add('hidden');
+                displayElements[key].textContent = inputElements[key].value || '（未入力）';
+                displayElements[key].classList.remove('hidden');
+            }
+        }
+
+        addStepBtn.style.display = isEditMode ? 'block' : 'none';
+        actionsContainer.style.display = isEditMode ? 'flex' : 'none';
+        renderSteps();
+    };
+
+    editModeToggle.addEventListener('change', updateEditMode);
+
     // State
     let roadmapSteps = [
         { text: '', completed: false },
@@ -25,25 +86,46 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     // データの読み込み
-    const loadData = () => {
-        const pdcaData = JSON.parse(localStorage.getItem('ekworld_pdca_data'));
-        if (pdcaData) {
-            goalInput.value = pdcaData.goal || '';
-            planInput.value = pdcaData.plan || '';
-            doInput.value = pdcaData.do || '';
-            checkInput.value = pdcaData.check || '';
-            actInput.value = pdcaData.act || '';
-            
-            if (pdcaData.roadmap && Array.isArray(pdcaData.roadmap)) {
-                roadmapSteps = pdcaData.roadmap;
+    const loadData = async () => {
+        if (!GAS_WEBAPP_URL || GAS_WEBAPP_URL === 'ここにコピーしたURLを貼り付けます') {
+            const localData = JSON.parse(localStorage.getItem('ekworld_pdca_data'));
+            if (localData) applyData(localData);
+            return;
+        }
+
+        try {
+            saveBtn.textContent = "読み込み中...";
+            saveBtn.disabled = true;
+            const response = await fetch(GAS_WEBAPP_URL);
+            const data = await response.json();
+            if (data && !data.error) {
+                applyData(data);
             }
+        } catch (error) {
+            console.error("データの読み込みに失敗しました", error);
+            showToast("読み込み失敗");
+        } finally {
+            saveBtn.textContent = "保存する！";
+            saveBtn.disabled = false;
+        }
+    };
+
+    const applyData = (pdcaData) => {
+        goalInput.value = pdcaData.goal || '';
+        planInput.value = pdcaData.plan || '';
+        doInput.value = pdcaData.do || '';
+        checkInput.value = pdcaData.check || '';
+        actInput.value = pdcaData.act || '';
+        
+        if (pdcaData.roadmap && Array.isArray(pdcaData.roadmap)) {
+            roadmapSteps = pdcaData.roadmap;
         }
         renderSteps();
+        updateEditMode();
     };
 
     // 保存処理
-    const saveData = () => {
-        // 現在のステップテキストを状態に反映
+    const saveData = async () => {
         updateStepsTextFromDOM();
         
         const pdcaData = {
@@ -54,8 +136,33 @@ document.addEventListener('DOMContentLoaded', () => {
             act: actInput.value,
             roadmap: roadmapSteps
         };
-        localStorage.setItem('ekworld_pdca_data', JSON.stringify(pdcaData));
-        showToast('保存しました！');
+
+        if (!GAS_WEBAPP_URL || GAS_WEBAPP_URL === 'ここにコピーしたURLを貼り付けます') {
+            localStorage.setItem('ekworld_pdca_data', JSON.stringify(pdcaData));
+            showToast('保存しました！(ローカル)');
+            return;
+        }
+
+        try {
+            saveBtn.textContent = "保存中...";
+            saveBtn.disabled = true;
+            const response = await fetch(GAS_WEBAPP_URL, {
+                method: 'POST',
+                body: JSON.stringify(pdcaData)
+            });
+            const result = await response.json();
+            if (result.success) {
+                showToast('保存しました！');
+            } else {
+                showToast('保存エラー');
+            }
+        } catch (error) {
+            console.error("保存に失敗しました", error);
+            showToast('保存失敗');
+        } finally {
+            saveBtn.textContent = "保存する！";
+            saveBtn.disabled = false;
+        }
     };
 
     // リセット処理
@@ -90,6 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Roadmap Functions
     const renderSteps = () => {
         stepList.innerHTML = '';
+        const isEditMode = editModeToggle.checked;
         
         roadmapSteps.forEach((step, index) => {
             const itemDiv = document.createElement('div');
@@ -99,6 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
             checkbox.type = 'checkbox';
             checkbox.className = 'step-checkbox';
             checkbox.checked = step.completed;
+            checkbox.disabled = !isEditMode;
             checkbox.addEventListener('change', (e) => {
                 updateStepsTextFromDOM();
                 roadmapSteps[index].completed = e.target.checked;
@@ -110,11 +219,13 @@ document.addEventListener('DOMContentLoaded', () => {
             textInput.className = 'step-input';
             textInput.placeholder = `ステップ ${index + 1}`;
             textInput.value = step.text;
+            textInput.readOnly = !isEditMode;
             
             const removeBtn = document.createElement('button');
             removeBtn.className = 'btn-remove-step';
             removeBtn.textContent = '×';
             removeBtn.title = '削除';
+            removeBtn.style.display = isEditMode ? 'flex' : 'none';
             removeBtn.addEventListener('click', () => {
                 updateStepsTextFromDOM();
                 roadmapSteps.splice(index, 1);

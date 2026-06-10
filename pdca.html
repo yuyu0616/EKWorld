@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PDCA | EKWorld</title>
+    <title>EKWorld</title>
     <link rel="stylesheet" href="style.css" />
     <style>
         .pdca-container {
@@ -351,7 +351,63 @@
                 width: 100%;
             }
         }
+
+        .mode-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .mode-tab {
+            background-color: var(--white);
+            color: var(--text-color);
+            border: 4px solid var(--text-color);
+            border-radius: 50px;
+            padding: 12px 32px;
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 4px 4px 0 var(--text-color);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            opacity: 0.6;
+        }
+
+        .mode-tab.active {
+            background-color: var(--primary);
+            color: var(--white);
+            opacity: 1;
+            transform: translateY(-4px);
+            box-shadow: 6px 8px 0 var(--text-color);
+        }
+
+        .mode-tab:hover:not(.active) {
+            transform: translateY(-2px);
+            opacity: 0.8;
+            box-shadow: 4px 6px 0 var(--text-color);
+        }
+
+        .mode-content {
+            display: none;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .mode-content.active {
+            display: flex;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
     </style>
+    <script>
+        const correctHash = '01063c8162c6f88bbbaf927b7cf4abb858b76d70934462ecd25d574ee038b9b3';
+        const urlParams = new URLSearchParams(window.location.search);
+        const auth = urlParams.get('auth');
+        if (auth !== correctHash) {
+            window.location.href = 'index.html';
+        }
+    </script>
 </head>
 
 <body>
@@ -373,6 +429,20 @@
         <h1>PDCAサイクル</h1>
 
         <div class="pdca-container">
+            <div class="mode-tabs">
+                <button class="mode-tab active" data-mode="pdca-mode">目標設定</button>
+                <button class="mode-tab" data-mode="roadmap-mode">ロードマップ</button>
+            </div>
+
+            <div class="edit-toggle-container">
+                <span class="edit-toggle-label">表示</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="editModeToggle" checked>
+                    <span class="slider round"></span>
+                </label>
+                <span class="edit-toggle-label" style="color: var(--primary);" id="editLabelText">編集</span>
+            </div>
+
             <!-- 目標設定 -->
             <div class="pdca-section">
                 <h2 class="pdca-section-title">
@@ -381,15 +451,17 @@
                 </h2>
                 <div class="input-group">
                     <label for="goalInput">達成したい目標</label>
-                    <input type="text" id="goalInput" class="input-text" placeholder="例: スプラトゥーンでウデマエXになる">
+                    <input type="text" id="goalInput" class="input-text" placeholder="チャンネル登録者１万人">
+                    <div id="goalDisplay" class="display-text hidden"></div>
                 </div>
             </div>
 
             <!-- Roadmap -->
-            <div class="pdca-section">
-                <h2 class="pdca-section-title">
+            <div id="roadmap-mode" class="mode-content">
+                <div class="pdca-section">
+                    <h2 class="pdca-section-title">
                     <span class="badge" style="background-color: var(--accent); color: var(--text-color);">R</span>
-                    <span style="color: var(--text-color);">Roadmap (道のり)</span>
+                    <span style="color: var(--text-color);">ロードマップ</span>
                 </h2>
                 <div class="progress-container">
                     <div id="progressBar" class="progress-bar"></div>
@@ -400,17 +472,20 @@
                     <!-- Steps will be generated here -->
                 </div>
                 <button id="addStepBtn" class="btn-add-step">＋ ステップを追加</button>
+                </div>
             </div>
 
-            <!-- Plan -->
-            <div class="pdca-section">
-                <h2 class="pdca-section-title title-p">
+            <div id="pdca-mode" class="mode-content active">
+                <!-- Plan -->
+                <div class="pdca-section">
+                    <h2 class="pdca-section-title title-p">
                     <span class="badge p">P</span>
                     Plan (計画)
                 </h2>
                 <div class="input-group">
                     <label for="planInput">目標達成のための具体的な計画</label>
-                    <textarea id="planInput" class="input-textarea" placeholder="例: 毎日1時間エイム練習をする。ガチマッチの動画を見て立ち回りを研究する。"></textarea>
+                    <textarea id="planInput" class="input-textarea" placeholder="例：次の動画の再生数1万回を達成するための企画を考える"></textarea>
+                    <div id="planDisplay" class="display-text hidden"></div>
                 </div>
             </div>
 
@@ -422,7 +497,8 @@
                 </h2>
                 <div class="input-group">
                     <label for="doInput">実際にやったこと・進捗</label>
-                    <textarea id="doInput" class="input-textarea" placeholder="例: 今日は30分エイム練習をした。ガチマッチを5戦やった。"></textarea>
+                    <textarea id="doInput" class="input-textarea" placeholder="例：今週の日曜日に動画をアップロードする"></textarea>
+                    <div id="doDisplay" class="display-text hidden"></div>
                 </div>
             </div>
 
@@ -434,7 +510,8 @@
                 </h2>
                 <div class="input-group">
                     <label for="checkInput">結果の振り返り・良かった点・悪かった点</label>
-                    <textarea id="checkInput" class="input-textarea" placeholder="例: エイムは良くなってきたが、デスが多かった。無駄な前線への突撃が多い気がする。"></textarea>
+                    <textarea id="checkInput" class="input-textarea" placeholder="例：動画の平均視聴時間を分析する"></textarea>
+                    <div id="checkDisplay" class="display-text hidden"></div>
                 </div>
             </div>
 
@@ -446,8 +523,10 @@
                 </h2>
                 <div class="input-group">
                     <label for="actInput">次への改善アクション</label>
-                    <textarea id="actInput" class="input-textarea" placeholder="例: 次は生存を第一に考えて立ち回る。デスしたら理由をメモする。"></textarea>
+                    <textarea id="actInput" class="input-textarea" placeholder="例：サムネイルをクリック率の高いものに変更する"></textarea>
+                    <div id="actDisplay" class="display-text hidden"></div>
                 </div>
+            </div>
             </div>
 
             <div class="actions">

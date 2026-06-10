@@ -45,10 +45,24 @@
             <a href="ito.html" class="menu-card" style="color: var(--primary);">
                 ito (イト)
             </a>
-            <a href="pdca.html" class="menu-card" style="color: var(--accent);">
-                目標・PDCA
-            </a>
+            <div class="menu-card" style="color: var(--accent);" onclick="openPasswordModal()">
+                🔒 目標設定
+            </div>
             <!-- 今後コンテンツが増えたらここに追加 -->
+        </div>
+    </div>
+
+    <!-- Password Modal -->
+    <div id="password-modal" class="modal-overlay hidden">
+        <div class="modal-content" id="modal-content-box">
+            <h2 style="color: var(--primary); margin-top: 0;">秘密のページ 🔒</h2>
+            <p style="margin-bottom: 24px; color: var(--text-color); font-weight: 700;">パスワードを入力してね！</p>
+            <input type="password" id="password-input" class="modal-input" placeholder="パスワード" />
+            <div style="color: #ef4444; font-size: 14px; margin-top: 8px; opacity: 0; font-weight: 700; transition: opacity 0.2s;" id="password-error">パスワードがちがうよ！</div>
+            <div class="modal-actions">
+                <button class="btn btn-close" onclick="closePasswordModal()">やめる</button>
+                <button class="btn btn-unlock" onclick="checkPassword()">かいじょ！</button>
+            </div>
         </div>
     </div>
 
@@ -62,6 +76,61 @@
                     loader.style.display = 'none';
                 }, 500); // フェードアウトの時間
             }, 800);
+        });
+
+        // モーダル処理
+        const modal = document.getElementById('password-modal');
+        const passwordInput = document.getElementById('password-input');
+        const passwordError = document.getElementById('password-error');
+        const modalContentBox = document.getElementById('modal-content-box');
+
+        function openPasswordModal() {
+            modal.classList.remove('hidden');
+            passwordInput.value = '';
+            passwordError.style.opacity = '0';
+            setTimeout(() => {
+                passwordInput.focus();
+            }, 100);
+        }
+
+        function closePasswordModal() {
+            modal.classList.add('hidden');
+        }
+
+        async function hashString(str) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(str);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function checkPassword() {
+            const password = passwordInput.value;
+            const hashed = await hashString(password);
+            const correctHash = '01063c8162c6f88bbbaf927b7cf4abb858b76d70934462ecd25d574ee038b9b3';
+            if (hashed === correctHash) {
+                // 正解
+                window.location.href = `pdca.html?auth=${hashed}`;
+            } else {
+                // エラー
+                passwordError.style.opacity = '1';
+                modalContentBox.classList.remove('shake-error');
+                // リフローを強制してアニメーションを再発火
+                void modalContentBox.offsetWidth;
+                modalContentBox.classList.add('shake-error');
+                
+                setTimeout(() => {
+                    modalContentBox.classList.remove('shake-error');
+                }, 400);
+            }
+        }
+
+        // エンターキーでも解除できるようにする
+        passwordInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkPassword();
+            }
         });
     </script>
 </body>
