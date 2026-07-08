@@ -121,9 +121,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 行ごとに処理してレコードに格納
         data.table.rows.forEach((row) => {
             const dateValue = row.c[0] ? (row.c[0].f || row.c[0].v) : '日付なし';
-            const markdownValue = row.c[1] ? row.c[1].v : '';
+            let markdownValue = row.c[1] ? row.c[1].v : '';
 
             if (markdownValue) {
+                // 行頭の「■」を見出し(h4)に変換する
+                markdownValue = markdownValue.replace(/^■\s*(.*)$/gm, '#### ■ $1');
+
                 allRecords.push({
                     date: dateValue,
                     html: marked.parse(markdownValue)
