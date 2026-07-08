@@ -90,6 +90,45 @@
             50% { opacity: 1; }
             100% { opacity: 0.5; }
         }
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 30px 0; /* 上下の余白も少し増やします */
+            padding: 16px 20px; /* 内側の余白も少し増やします */
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            gap: 24px; /* ボタンが近づきすぎないように最低限の隙間を設ける */
+        }
+
+        .page-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px; /* ボタン自体も少し大きく */
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
+            white-space: nowrap; /* テキストの折り返しを防ぐ */
+        }
+
+        .page-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .page-btn:not(:disabled):hover {
+            opacity: 0.8;
+        }
+
+        .page-info {
+            font-weight: bold;
+            color: var(--primary);
+            margin: 0 20px; /* 中央のテキストの左右にも余白を追加 */
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -97,12 +136,15 @@
     <div id="app">
         <h1 style="color: var(--primary); margin-bottom: 24px;">トレンド分析</h1>
 
-        <div class="markdown-container">
-            <div id="content-loader" class="loading-text" style="display: none;">データを読み込み中...</div>
-            <div id="markdown-content" class="markdown-body">
-                <!-- Markdown content will be rendered here -->
-            </div>
+        <div id="content-loader" class="loading-text" style="display: none;">データを読み込み中...</div>
+        
+        <div id="pagination-top" class="pagination-container" style="display: none;"></div>
+
+        <div id="history-container">
+            <!-- Markdown content will be rendered here dynamically -->
         </div>
+
+        <div id="pagination-bottom" class="pagination-container" style="display: none;"></div>
     </div>
     <script src="YouTubeAnalysis.js"></script>
 </body>

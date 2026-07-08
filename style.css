@@ -250,13 +250,18 @@ canvas {
 /* --- ミッション --- */
 .mission-container {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 16px;
     width: 100%;
     margin-top: 10px;
 }
 
 .mission-item {
+    flex: 1 1 calc(50% - 16px);
+    box-sizing: border-box;
+    min-width: 280px;
     display: flex;
     justify-content: space-between;
     align-items: center;
