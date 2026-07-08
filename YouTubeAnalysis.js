@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         pageRecords.forEach((record) => {
             htmlOutput += `
                 <div class="markdown-container" style="margin-bottom: 30px;">
-                    <div style="background-color: var(--primary-light); color: var(--primary); padding: 8px 16px; border-radius: 8px; font-weight: bold; margin-bottom: 16px; display: inline-block;">
+                    <div style="background-color: var(--primary-light); color: var(--primary); font-weight: bold; display: inline-block;">
                         実行日時: ${record.date}
                     </div>
                     <div class="markdown-body">
