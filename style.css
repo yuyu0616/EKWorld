@@ -3,7 +3,7 @@
 :root {
     --bg-color: #fdf2f8;
     /* very light pink */
-    --text-color: #333333;
+    --text-color: #4b4b4b;
     --primary: #ff5e7e;
     --primary-dark: #cc4b64;
     --secondary: #3bcef3;
@@ -817,4 +817,4 @@ input:checked + .slider:before {
     white-space: pre-wrap;
     min-height: 50px;
     word-break: break-word;
-}
+}

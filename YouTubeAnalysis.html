@@ -23,12 +23,48 @@
         }
         
         /* Basic Markdown Styles */
-        .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+        .markdown-body h1 {
             color: var(--primary);
-            border-bottom: 2px solid var(--primary-light);
+            border-bottom: 4px dashed var(--primary);
             padding-bottom: 8px;
             margin-top: 24px;
+            margin-bottom: 20px;
+            font-weight: 800;
+        }
+
+        .markdown-body h2 {
+            color: var(--text-color);
+            background-color: var(--accent);
+            padding: 12px 20px;
+            margin-top: 36px;
+            margin-bottom: 24px;
+            border: 3px solid var(--text-color);
+            border-radius: 12px;
+            box-shadow: 4px 4px 0px var(--text-color);
+            font-weight: 800;
+        }
+
+        .markdown-body h3 {
+            color: var(--primary-dark);
+            padding: 8px 16px;
+            margin-top: 24px;
+            margin-bottom: 8px;
+            font-weight: 800;
+            display: inline-block;
+        }
+
+        .markdown-body h4, .markdown-body h5 {
+            color: var(--primary-dark);
+            background-color: var(--white);
+            border: 3px solid var(--primary);
+            border-radius: 8px;
+            padding: 8px 16px;
+            margin-top: 28px;
             margin-bottom: 16px;
+            box-shadow: 3px 3px 0px var(--primary);
+            font-weight: 800;
+            display: inline-block;
+            width: fit-content;
         }
         
         .markdown-body p {
@@ -38,7 +74,7 @@
 
         .markdown-body ul, .markdown-body ol {
             padding-left: 24px;
-            margin-bottom: 16px;
+            margin-bottom: 24px;
         }
 
         .markdown-body code {
