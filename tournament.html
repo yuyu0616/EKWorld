@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>トーナメント表 - ゆるすと！</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <!-- ローディングアニメーション -->
+    <div id="loader-overlay">
+        <div class="loader-content">
+            <div class="loader-text">
+                <span style="--i:1;">ゆ</span>
+                <span style="--i:2;">る</span>
+                <span style="--i:3;">す</span>
+                <span style="--i:4;">と</span>
+                <span style="--i:5;">！</span>
+            </div>
+        </div>
+    </div>
+
+    <a href="index.html" class="back-btn">← もどる</a>
+    
+    <div id="app" style="max-width: 900px;">
+        <h1>トーナメント表 🏆</h1>
+        
+        <div class="pop-card" style="padding: 24px; width: 100%; box-sizing: border-box; margin-bottom: 24px;">
+            <p style="margin-top: 0; margin-bottom: 16px; font-weight: 700; color: #64748b;">
+                枠数をえらんで、名前を入力してね！ 空欄にすると「シード（Bye）」になるよ！
+            </p>
+            <div style="margin-bottom: 24px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <label style="font-weight: 800; font-size: 18px;">参加枠数:</label>
+                <select id="bracket-size" class="modal-input" style="width: 120px; padding: 10px; font-size: 18px; text-align: left;">
+                    <option value="4">4枠</option>
+                    <option value="8" selected>8枠</option>
+                    <option value="16">16枠</option>
+                    <option value="32">32枠</option>
+                </select>
+                <button class="btn reset-btn" style="margin-top: 0; padding: 10px 20px; font-size: 16px;" onclick="shuffleParticipants()">🔀 シャッフル</button>
+                <button class="btn spin-btn" style="margin-top: 0; padding: 10px 24px; font-size: 16px; margin-left: auto;" onclick="generateBracket()">✨ 作成！</button>
+            </div>
+            
+            <div id="participants-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">
+                <!-- JavaScriptで動的に生成 -->
+            </div>
+        </div>
+
+        <div class="tournament-wrapper pop-card" id="tournament-wrapper" style="display: none; padding: 40px 20px; overflow-x: auto; width: 100%; box-sizing: border-box;">
+            <!-- ここにトーナメント表が描画される -->
+        </div>
+    </div>
+
+    <script src="tournament.js"></script>
+    <script>
+        window.addEventListener('load', () => {
+            const loader = document.getElementById('loader-overlay');
+            setTimeout(() => {
+                loader.classList.add('loaded');
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                }, 500);
+            }, 800);
+        });
+    </script>
+</body>
+
+</html>

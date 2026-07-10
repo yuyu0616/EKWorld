@@ -798,6 +798,148 @@ input:checked + .slider:before {
     transform: translateX(26px);
 }
 
+/* --- トーナメント表用スタイル --- */
+.tournament-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    padding: 20px 0;
+}
+
+.bracket {
+    display: flex;
+}
+
+.round {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 220px;
+    flex-shrink: 0;
+}
+
+.match {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    justify-content: center;
+    position: relative;
+}
+
+/* 横線（次ラウンドへ繋がる） */
+.round:not(:last-child) .match::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 50%;
+    width: 30px;
+    height: 4px;
+    background-color: var(--text-color);
+    transform: translateY(-50%);
+}
+
+.match-team {
+    position: relative;
+    padding: 10px 0;
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+/* 横線（プレイヤーから縦線へ） */
+.match-team.top::before, .match-team.bottom::before {
+    content: "";
+    position: absolute;
+    right: 30px;
+    top: 50%;
+    width: 15px;
+    height: 4px;
+    background-color: var(--text-color);
+    transform: translateY(-50%);
+}
+
+/* 縦線（同じマッチ内の2チームを繋ぐ） */
+.match-team.top::after {
+    content: "";
+    position: absolute;
+    right: 30px;
+    top: 50%;
+    bottom: 0;
+    width: 4px;
+    background-color: var(--text-color);
+}
+.match-team.bottom::after {
+    content: "";
+    position: absolute;
+    right: 30px;
+    top: 0;
+    bottom: 50%;
+    width: 4px;
+    background-color: var(--text-color);
+}
+
+/* 決勝ラウンド（最後の勝者）の特別なスタイル */
+.round:last-child .match {
+    justify-content: center;
+}
+.round:last-child .match-team.top::after,
+.round:last-child .match-team.bottom::after,
+.round:last-child .match-team.top::before,
+.round:last-child .match-team.bottom::before {
+    display: none;
+}
+
+.player-box {
+    width: 140px;
+    background-color: var(--white);
+    border: 4px solid var(--text-color);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-weight: 800;
+    font-size: 16px;
+    text-align: center;
+    box-shadow: 4px 4px 0px var(--text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative;
+    z-index: 2;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.player-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 6px 6px 0px var(--primary);
+    border-color: var(--primary);
+}
+
+.player-box.bye {
+    background-color: #f1f5f9;
+    color: #94a3b8;
+    border-color: #cbd5e1;
+    box-shadow: 4px 4px 0px #cbd5e1;
+    cursor: default;
+}
+
+.player-box.bye:hover {
+    transform: none;
+    box-shadow: 4px 4px 0px #cbd5e1;
+    border-color: #cbd5e1;
+}
+
+.player-box.final-winner {
+    background-color: #fffbeb;
+    border-color: var(--accent);
+    box-shadow: 6px 6px 0px var(--accent);
+    transform: scale(1.1);
+    cursor: default;
+}
+
+.player-box.final-winner:hover {
+    transform: scale(1.15);
+}
+
 .slider.round {
     border-radius: 34px;
 }
