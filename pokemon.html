@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ポケモン配信</title>
+    <link rel="stylesheet" href="pokemon.css">
+    <link rel="icon" type="image/png" href="logo.png" />
+</head>
+<body class="control-panel">
+
+<div class="control-container">
+    <div class="control-header">
+        <h1 style="color: var(--primary); margin: 0; font-size: 32px; text-shadow: 2px 2px 0px white;">🎮 配信コントロールパネル</h1>
+        <p>ここで入力した内容が <code>pokemon_overlay.html</code> にリアルタイムで反映されます。</p>
+        <div style="margin-top: 10px;">
+            <a href="pokemon_overlay.html" target="_blank" class="btn-secondary">🔗 オーバーレイ画面を開く (OBS用)</a>
+            <a href="index.html" class="btn-secondary" style="background-color: #95a5a6;">🔙 ホームに戻る</a>
+        </div>
+    </div>
+
+    <!-- 全般設定 -->
+    <div class="control-panel-box full-width" style="display: flex; gap: 20px;">
+        <div class="form-group" style="flex: 2;">
+            <label>対戦タイトル</label>
+            <input type="text" id="ctrl-title" class="form-control" value="ランクマッチ 配信">
+        </div>
+        <div class="form-group" style="flex: 1;">
+            <label>ルール</label>
+            <input type="text" id="ctrl-rule" class="form-control" value="シングルバトル">
+        </div>
+        <div class="form-group" style="flex: 1;">
+            <label>レート / 順位 / その他</label>
+            <input type="text" id="ctrl-rate" class="form-control" value="マスターボール級">
+        </div>
+    </div>
+
+    <!-- 自分のパーティ -->
+    <div class="control-panel-box">
+        <h2 style="color: var(--primary);">🔴 自分のパーティ</h2>
+        <div class="party-edit-grid" id="ctrl-party-left-container">
+            <!-- JSで6枠生成 -->
+        </div>
+    </div>
+
+    <!-- 相手のパーティ -->
+    <div class="control-panel-box">
+        <h2 style="color: var(--secondary);">🔵 相手のパーティ</h2>
+        <div class="party-edit-grid" id="ctrl-party-right-container">
+            <!-- JSで6枠生成 -->
+        </div>
+    </div>
+
+    <!-- テロップ・メモ設定 -->
+    <div class="control-panel-box">
+        <h2>💬 実況テロップ</h2>
+        <div class="form-group">
+            <label>テロップ内容 (画面中央下に大きく表示されます)</label>
+            <textarea id="ctrl-telop" class="form-control" style="min-height: 60px;">対戦よろしくお願いします！</textarea>
+        </div>
+    </div>
+
+    <div class="control-panel-box">
+        <h2>📊 情報パネル</h2>
+        <div class="form-group">
+            <label>メモ</label>
+            <textarea id="ctrl-memo" class="form-control">・相手の裏はミミッキュ警戒
+・ステロまいて展開する</textarea>
+        </div>
+    </div>
+
+    <!-- OBS用のガイド表示切り替え -->
+    <div class="control-panel-box full-width" style="text-align: center;">
+        <label class="checkbox-label" style="justify-content: center; font-size: 16px;">
+            <input type="checkbox" id="ctrl-show-guide" checked>
+            OBS配置用のアタリ線（ゲーム画面・カメラ枠）を表示する
+        </label>
+        <p style="font-size: 12px; color: #666; margin-top: 5px;">※OBSでの位置調整が終わったらチェックを外してください。</p>
+        
+        <div style="margin-top: 20px;">
+            <button class="btn-primary" onclick="resetData()">↺ データを初期化する</button>
+        </div>
+    </div>
+
+</div>
+
+<script src="current_state.js"></script>
+<script src="pokemon_data.js"></script>
+<script src="item_data.js"></script>
+<script src="pokemon.js"></script>
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        initControlPanel();
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ポケモン配信オーバーレイ</title>
+    <link rel="stylesheet" href="pokemon.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="overlay-mode">
+
+<div class="overlay-wrapper">
+<div class="overlay-container">
+    <!-- ヘッダー（タイトル・ルール等） -->
+    <div class="overlay-panel header-area">
+        <div class="title-icon"></div>
+        <div class="title-panel" id="ov-title">対戦タイトル</div>
+        <div class="rule-panel">
+            <div class="label">ルール</div>
+            <div class="value" id="ov-rule">シングルバトル</div>
+        </div>
+        <div class="rate-panel">
+            <div class="label">レート/順位</div>
+            <div class="value" id="ov-rate">1500</div>
+        </div>
+    </div>
+
+    <!-- 自分パーティ (左側) -->
+    <div class="overlay-panel party-area-left">
+        <div class="party-header">自分のパーティ</div>
+        <div id="ov-party-left">
+            <!-- JSで動的に生成 -->
+        </div>
+    </div>
+
+    <!-- 相手パーティ (右側) -->
+    <div class="overlay-panel party-area-right">
+        <div class="party-header">相手のパーティ</div>
+        <div id="ov-party-right">
+            <!-- JSで動的に生成 -->
+        </div>
+    </div>
+
+    <!-- 中央対戦画面（透過・ゲーム画面用） -->
+    <div class="main-screen-area">
+        <div class="main-screen-label" id="ov-main-guide">ゲーム画面配置エリア (OBS等で裏に配置)</div>
+    </div>
+
+    <!-- カメラエリア (左下) -->
+    <div class="overlay-panel camera-area">
+        <div class="camera-header"><i class="fa-solid fa-video"></i> 実況者カメラ</div>
+        <div class="camera-placeholder" id="ov-camera-guide">カメラ配置エリア</div>
+    </div>
+
+    <!-- テロップエリア (中央下) -->
+    <div class="overlay-panel telop-area">
+        <div class="telop-text-container">
+        </div>
+    </div>
+
+    <!-- 情報パネル (右下) -->
+    <div class="overlay-panel info-area">
+        <div class="info-header"><i class="fa-solid fa-calculator"></i> 情報・メモ</div>
+        <div class="info-content">
+            <div class="info-box">
+                <div id="ov-memo"></div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<script src="current_state.js"></script>
+<script src="pokemon.js"></script>
+<script>
+    // オーバーレイ用の初期化
+    window.addEventListener('DOMContentLoaded', () => {
+        initOverlay();
+        
+        // 画面サイズに合わせて1920x1080の比率を保ったままスケールする
+        const wrapper = document.querySelector('.overlay-wrapper');
+        const resize = () => {
+            const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+            wrapper.style.transform = `scale(${scale})`;
+        };
+        window.addEventListener('resize', resize);
+        resize(); // 初回実行
+
+        // 開発・テスト用に背景を透過ではなく薄い緑にする場合はコメントアウトを外す
+        // document.body.style.backgroundColor = '#00ff00';
+    });
+</script>
+</body>
+</html>
