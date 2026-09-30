@@ -4,7 +4,7 @@ import com.anthropic.client.AnthropicClient
 import com.anthropic.client.okhttp.AnthropicOkHttpClient
 import com.anthropic.core.JsonValue
 import com.anthropic.errors.AnthropicServiceException
-import com.anthropic.errors.AuthenticationException
+import com.anthropic.errors.UnauthorizedException
 import com.anthropic.errors.RateLimitException
 import com.anthropic.errors.AnthropicIoException
 import com.anthropic.models.beta.messages.BetaOutputConfig
@@ -66,7 +66,7 @@ object ClaudeClient {
 
             val response = try {
                 clientFor(apiKey).beta().messages().create(builder.build())
-            } catch (e: AuthenticationException) {
+            } catch (e: UnauthorizedException) {
                 throw ClaudeException("API キーが正しくないみたい…設定を確認してね。", e)
             } catch (e: RateLimitException) {
                 throw ClaudeException("ちょっと話しすぎたかも。少し待ってからまた話しかけてね。", e)
