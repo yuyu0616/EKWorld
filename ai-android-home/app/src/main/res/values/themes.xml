@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.AiAndroid" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/brand</item>
+        <item name="colorSecondary">@color/brand_dark</item>
+    </style>
+
+    <style name="Theme.AiAndroid.Chat" parent="Theme.Material3.DayNight.Dialog">
+        <item name="colorPrimary">@color/brand</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowMinWidthMajor">92%</item>
+        <item name="android:windowMinWidthMinor">92%</item>
+        <item name="android:windowCloseOnTouchOutside">true</item>
+    </style>
+</resources>

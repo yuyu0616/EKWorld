@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AIアンドロイド</string>
+    <string name="settings_title">AIアンドロイドの設定</string>
+    <string name="api_key_label">Claude API キー</string>
+    <string name="api_key_hint">sk-ant-…</string>
+    <string name="name_label">アンドロイドの名前</string>
+    <string name="personality_label">性格・話し方（自由記述）</string>
+    <string name="personality_default">明るく好奇心旺盛。ちょっとドジだけど持ち主のことが大好き。</string>
+    <string name="save">保存</string>
+    <string name="saved">保存しました</string>
+    <string name="start">ホームに出現させる</string>
+    <string name="stop">しまう</string>
+    <string name="overlay_permission_needed">「他のアプリの上に重ねて表示」を許可してください</string>
+    <string name="api_key_missing">先に Claude API キーを保存してください</string>
+    <string name="reset_conversation">会話をリセット</string>
+    <string name="conversation_reset">会話をリセットしました</string>
+    <string name="howto">使い方：出現させるとホーム画面の下を歩き回ります。タップで会話、ドラッグで移動できます。</string>
+    <string name="chat_hint">話しかける…</string>
+    <string name="send">送信</string>
+    <string name="thinking">考え中…</string>
+    <string name="notification_channel">常駐キャラクター</string>
+    <string name="notification_text">ホーム画面でお留守番中</string>
+</resources>
