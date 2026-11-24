@@ -7,7 +7,7 @@
  */
 (function (root) {
     function emptyState() {
-        return { round: 1, question: null, players: {}, reveal: {} };
+        return { round: 1, question: null, stage: null, players: {}, reveal: {} };
     }
 
     function normalize(s) {
@@ -16,6 +16,7 @@
         return {
             round: Number(s.round) || 1,
             question: s.question && typeof s.question === 'object' ? s.question : null,
+            stage: s.stage && typeof s.stage === 'object' ? s.stage : null,
             players: s.players && typeof s.players === 'object' ? s.players : {},
             reveal: s.reveal && typeof s.reveal === 'object' ? s.reveal : {}
         };
@@ -33,6 +34,12 @@
         if (!b) return a;
         if ((a.at || 0) !== (b.at || 0)) return (a.at || 0) > (b.at || 0) ? a : b;
         return canon(a) >= canon(b) ? a : b;
+    }
+
+    // ラウンドが新しい方を優先し、同じラウンドなら新しい方を採用
+    function lwwRound(a, b) {
+        if (a && b && (a.round || 0) !== (b.round || 0)) return (a.round || 0) > (b.round || 0) ? a : b;
+        return lww(a, b);
     }
 
     function mergeMaps(a, b) {
@@ -63,6 +70,7 @@
         return {
             round,
             question: lww(a.question, b.question),
+            stage: lwwRound(a.stage, b.stage),
             players,
             reveal
         };
