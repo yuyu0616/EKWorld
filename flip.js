@@ -6,7 +6,7 @@
  */
 const { emptyState, normalize, canon, mergeState } = window.FlipMerge;
 const API_URL = '/api/flip';
-const SYNC_INTERVAL_MS = 2000;
+const SYNC_INTERVAL_MS = 4000;
 
 // ---------- アプリ本体 ----------
 

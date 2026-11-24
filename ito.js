@@ -5,7 +5,7 @@
  * カード配布や判定はサーバー側 (netlify/functions/ito.mjs) で行います。
  */
 const API_URL = '/api/ito';
-const SYNC_INTERVAL_MS = 1500;
+const SYNC_INTERVAL_MS = 4000;
 
 const itoApp = {
     state: {
