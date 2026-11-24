@@ -52,10 +52,18 @@
         Object.keys(reveal).forEach(k => {
             if ((reveal[k].round || 0) < round) delete reveal[k];
         });
+        const players = mergeMaps(a.players, b.players);
+        // 古いラウンドの回答は中身を消す (手書きデータでサイズが膨らまないように)
+        Object.keys(players).forEach(k => {
+            const p = players[k];
+            if (p && (p.round || 0) < round && (p.submitted || p.answer || p.drawing)) {
+                players[k] = { ...p, kind: 'text', answer: '', drawing: null, submitted: false };
+            }
+        });
         return {
             round,
             question: lww(a.question, b.question),
-            players: mergeMaps(a.players, b.players),
+            players,
             reveal
         };
     }
