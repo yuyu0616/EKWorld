@@ -25,9 +25,17 @@ const flipApp = {
     serverState: null,
     answerMode: 'text', // 'text' | 'draw'
     pad: null,
+    zoomName: null,     // 大きく表示しているカードの持ち主
+    boardWidth: 0,
 
     init() {
         this.answerMode = this.safeGet('flipAnswerMode') === 'draw' ? 'draw' : 'text';
+        this.bindZoomEvents();
+        window.addEventListener('resize', () => this.layoutCards(true));
+        document.addEventListener('fullscreenchange', () => {
+            this.renderFullscreenButton();
+            this.layoutCards(true);
+        });
         this.render();
     },
 
@@ -128,8 +136,17 @@ const flipApp = {
         on('next-round-btn', 'click', () => this.nextRound());
         on('cards-grid', 'click', e => {
             const card = e.target.closest('.flip-card');
-            if (card && !card.classList.contains('disabled')) this.toggleCard(card.dataset.name);
+            if (!card || card.classList.contains('disabled')) return;
+            // ふせているカード → オープン / オープン済みのカード → 大きく表示
+            if (this.isOpen(card.dataset.name)) this.openZoom(card.dataset.name);
+            else this.toggleCard(card.dataset.name);
         });
+        on('fullscreen-btn', 'click', () => this.toggleFullscreen());
+        this.renderFullscreenButton();
+        // 画面幅が変わったらカードの大きさを計算し直す
+        if (window.ResizeObserver) {
+            new ResizeObserver(() => this.layoutCards()).observe(document.getElementById('board'));
+        }
     },
 
     setupDrawTools() {
@@ -223,7 +240,7 @@ const flipApp = {
         document.querySelectorAll('.round-no').forEach(el => { el.textContent = this.state.round; });
 
         const q = this.currentQuestion();
-        ['answer-question', 'reveal-question'].forEach(id => {
+        ['answer-question', 'reveal-question', 'board-question'].forEach(id => {
             const el = document.getElementById(id);
             el.textContent = q || '（お題なし）';
             el.classList.toggle('empty', !q);
@@ -278,6 +295,7 @@ const flipApp = {
             li.classList.toggle('active', li.dataset.stage === stage);
             li.classList.toggle('done', i < order.indexOf(stage));
         });
+        document.body.classList.toggle('wide', stage === 'reveal');
         if (this.renderedStage === stage) return;
 
         order.forEach(name => {
@@ -293,6 +311,10 @@ const flipApp = {
 
         // 回答画面に戻ってきたらキャンバスの大きさを合わせ直す
         if (stage === 'answer') this.renderAnswerMode();
+        if (stage !== 'reveal') {
+            this.closeZoom();
+            if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+        }
     },
 
     renderMembers(id, players, isOk, prefix = () => '') {
@@ -365,7 +387,7 @@ const flipApp = {
 
             card.classList.toggle('open', open);
             card.classList.toggle('disabled', !answered);
-            card.title = !answered ? '' : (open ? 'タップでふせる' : 'タップでオープン');
+            card.title = !answered ? '' : (open ? 'タップで大きく表示' : 'タップでオープン');
 
             const back = card.querySelector('.flip-back');
             back.classList.toggle('waiting', !answered);
@@ -390,10 +412,180 @@ const flipApp = {
                 }
             }
             ans.classList.toggle('drawing', isDrawing);
-            ans.classList.toggle('long', !isDrawing && open && (p.answer || '').length > 20);
         });
 
         Object.values(existing).forEach(el => el.remove());
+        this.layoutCards(true);
+        this.renderZoom();
+    },
+
+    /**
+     * 人数と画面サイズから、カードがいちばん大きくなる列数を選ぶ
+     * (カードは横:縦 = 5:4、なるべく1画面に全員分が収まるように)
+     */
+    layoutCards(force = false) {
+        const grid = document.getElementById('cards-grid');
+        const board = document.getElementById('board');
+        if (!grid || !board || board.offsetParent === null && !document.fullscreenElement) return;
+        const width = grid.clientWidth;
+        if (!width || (!force && width === this.boardWidth)) return;
+        this.boardWidth = width;
+
+        const n = grid.children.length;
+        if (!n) return;
+        const gap = width < 480 ? 12 : 16;
+        const ratio = 0.8; // 高さ / 幅
+        const fullscreen = !!document.fullscreenElement;
+        const top = grid.getBoundingClientRect().top - board.getBoundingClientRect().top;
+        const availH = fullscreen
+            ? window.innerHeight - top - 24
+            : Math.max(320, window.innerHeight - 220);
+        const maxW = fullscreen ? 2000 : 560;
+
+        let best = { cols: 1, w: 0 };
+        // スマホなど幅が狭い画面では、縦に収めるより横幅いっぱいに大きく表示する (スクロールで見る)
+        const narrow = !fullscreen && width < 600;
+        for (let cols = 1; cols <= n; cols++) {
+            const rows = Math.ceil(n / cols);
+            const byWidth = (width - gap * (cols - 1)) / cols;
+            const byHeight = narrow ? Infinity : ((availH - gap * (rows - 1)) / rows) / ratio;
+            const w = Math.min(byWidth, byHeight, maxW);
+            if (w > best.w + 0.5) best = { cols, w };
+        }
+        // 縦に収まらないほど人数が多い場合でも、小さくなりすぎないようにする
+        const minW = Math.min(width, 150);
+        if (best.w < minW) {
+            const cols = Math.max(1, Math.floor((width + gap) / (minW + gap)));
+            best = { cols, w: (width - gap * (cols - 1)) / cols };
+        }
+        const w = Math.floor(best.w);
+        grid.style.gap = gap + 'px';
+        grid.style.gridTemplateColumns = `repeat(${best.cols}, ${w}px)`;
+        grid.style.setProperty('--card-h', Math.floor(w * ratio) + 'px');
+        this.fitAllTexts();
+    },
+
+    fitAllTexts() {
+        document.querySelectorAll('#cards-grid .flip-card.open .card-answer:not(.drawing)').forEach(el => this.fitText(el));
+    },
+
+    // 文字がはみ出さない範囲で、いちばん大きなフォントサイズにする
+    fitText(el, max = 220) {
+        if (!el.textContent || !el.clientHeight) return;
+        let lo = 12;
+        let hi = Math.max(lo, Math.min(max, el.clientHeight));
+        while (hi - lo > 1) {
+            const mid = Math.floor((lo + hi) / 2);
+            el.style.fontSize = mid + 'px';
+            if (el.scrollHeight <= el.clientHeight + 1 && el.scrollWidth <= el.clientWidth + 1) lo = mid;
+            else hi = mid;
+        }
+        el.style.fontSize = lo + 'px';
+    },
+
+    // ---------- 全画面 ----------
+
+    renderFullscreenButton() {
+        const btn = document.getElementById('fullscreen-btn');
+        if (!btn) return;
+        const board = document.getElementById('board');
+        btn.hidden = !(document.fullscreenEnabled && board && board.requestFullscreen);
+        btn.textContent = document.fullscreenElement ? '✕ 全画面を終了' : '⛶ 全画面';
+    },
+
+    toggleFullscreen() {
+        if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => {});
+        } else {
+            document.getElementById('board').requestFullscreen().catch(() => {});
+        }
+    },
+
+    // ---------- 1枚を大きく表示 ----------
+
+    openedPlayers() {
+        return this.activePlayers().filter(p => this.isOpen(p.name));
+    },
+
+    bindZoomEvents() {
+        const on = (id, fn) => document.getElementById(id).addEventListener('click', fn);
+        on('zoom-close', () => this.closeZoom());
+        on('zoom-prev', () => this.moveZoom(-1));
+        on('zoom-next', () => this.moveZoom(1));
+        on('zoom-hide', () => {
+            const name = this.zoomName;
+            this.closeZoom();
+            if (name && this.isOpen(name)) this.toggleCard(name);
+        });
+        document.getElementById('zoom').addEventListener('click', e => {
+            if (e.target.id === 'zoom') this.closeZoom();
+        });
+        document.addEventListener('keydown', e => {
+            if (!this.zoomName) return;
+            if (e.key === 'Escape') this.closeZoom();
+            if (e.key === 'ArrowLeft') this.moveZoom(-1);
+            if (e.key === 'ArrowRight') this.moveZoom(1);
+        });
+        window.addEventListener('resize', () => {
+            if (this.zoomName) this.fitText(document.getElementById('zoom-answer'), 400);
+        });
+    },
+
+    openZoom(name) {
+        this.zoomName = name;
+        this.zoomKey = null;
+        const overlay = document.getElementById('zoom');
+        // 全画面中は全画面の要素の中に出さないと見えない
+        (document.fullscreenElement || document.body).appendChild(overlay);
+        overlay.hidden = false;
+        this.renderZoom();
+    },
+
+    closeZoom() {
+        this.zoomName = null;
+        const overlay = document.getElementById('zoom');
+        if (overlay) overlay.hidden = true;
+    },
+
+    moveZoom(step) {
+        const list = this.openedPlayers();
+        const i = list.findIndex(p => p.name === this.zoomName);
+        const next = list[i + step];
+        if (next) {
+            this.zoomName = next.name;
+            this.renderZoom();
+        }
+    },
+
+    renderZoom() {
+        if (!this.zoomName) return;
+        const list = this.openedPlayers();
+        const i = list.findIndex(p => p.name === this.zoomName);
+        // ふせられた・次のお題に進んだなどで表示できなくなったら閉じる
+        if (i < 0) {
+            this.closeZoom();
+            return;
+        }
+        const p = list[i];
+        document.getElementById('zoom-name').textContent = p.name;
+        document.getElementById('zoom-pos').textContent = `${i + 1} / ${list.length}`;
+        document.getElementById('zoom-prev').disabled = i === 0;
+        document.getElementById('zoom-next').disabled = i === list.length - 1;
+
+        const key = `${p.name}:${p.at}`;
+        if (this.zoomKey === key) return;
+        this.zoomKey = key;
+        const ans = document.getElementById('zoom-answer');
+        ans.textContent = '';
+        ans.style.fontSize = '';
+        const isDrawing = p.kind === 'draw';
+        ans.classList.toggle('drawing', isDrawing);
+        if (isDrawing) {
+            ans.appendChild(FlipDraw.toSVG(p.drawing));
+        } else {
+            ans.textContent = p.answer;
+            requestAnimationFrame(() => this.fitText(ans, 400));
+        }
     },
 
     createCard(name) {
@@ -411,6 +603,7 @@ const flipApp = {
                 <div class="flip-face flip-front">
                     <div class="card-name"><span class="name-text"></span><span class="me-badge">あなた</span></div>
                     <div class="card-answer"></div>
+                    <div class="zoom-icon">🔍</div>
                 </div>
             </div>`;
         return card;
