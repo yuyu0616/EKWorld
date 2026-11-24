@@ -336,6 +336,86 @@
         }
         .sync-status.error { color: #ef4444; opacity: 1; }
 
+        /* 画面遷移 */
+        .steps {
+            list-style: none;
+            display: flex;
+            gap: 6px;
+            padding: 0;
+            margin: 0;
+        }
+        .steps li {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 4px;
+            border: 3px solid #cbd5e1;
+            border-radius: 50px;
+            background: var(--white);
+            color: #94a3b8;
+            font-weight: 800;
+            font-size: 15px;
+        }
+        .steps .step-no {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            background: #cbd5e1;
+            color: var(--white);
+            font-size: 13px;
+        }
+        .steps li.done { color: var(--text-color); border-color: var(--text-color); }
+        .steps li.done .step-no { background: var(--text-color); }
+        .steps li.active {
+            color: var(--text-color);
+            border-color: var(--text-color);
+            background: var(--accent);
+            box-shadow: 3px 3px 0 var(--text-color);
+        }
+        .steps li.active .step-no { background: var(--primary); }
+        .screen {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .screen[hidden] { display: none; }
+        .screen.enter { animation: screenIn 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes screenIn {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: none; }
+        }
+        .screen-title { text-align: center; color: var(--primary); }
+        .screen-note {
+            text-align: center;
+            font-size: 13px;
+            font-weight: 800;
+            color: #64748b;
+            margin: 12px 0 0;
+        }
+        .nav-links { text-align: center; margin-top: 8px; }
+        .member-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .member-chip {
+            padding: 6px 14px;
+            border-radius: 50px;
+            border: 2px solid var(--text-color);
+            font-weight: 800;
+            background: #f1f5f9;
+            color: #94a3b8;
+        }
+        .member-chip.ok { background: var(--accent); color: var(--text-color); }
+        .member-chip.me { border-color: var(--secondary); }
+
         @media (max-width: 480px) {
             .cards-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
             .question-text { font-size: 20px; }
@@ -376,58 +456,98 @@
             <div>あなた: <span id="display-name"></span> <button class="link-btn" id="leave-btn">退出</button></div>
         </div>
 
-        <div class="question-display">
-            <div class="question-label">お題 <span id="round-label"></span></div>
-            <div class="question-text" id="display-question"></div>
-        </div>
+        <ol class="steps" id="steps">
+            <li data-stage="question"><span class="step-no">1</span>お題</li>
+            <li data-stage="answer"><span class="step-no">2</span>回答</li>
+            <li data-stage="reveal"><span class="step-no">3</span>フリップ</li>
+        </ol>
 
-        <div class="flip-panel">
-            <h3>お題を出す</h3>
-            <div class="row">
-                <input type="text" id="questionInput" class="flip-input grow" maxlength="100" placeholder="例: 好きな食べ物は？">
-                <button class="btn btn-sm" id="set-question-btn" style="background-color: var(--secondary);">お題を設定</button>
-            </div>
-        </div>
-
-        <div class="flip-panel">
-            <h3>あなたの回答</h3>
-            <div class="mode-tabs" id="mode-tabs">
-                <button type="button" class="mode-tab" data-mode="text">⌨ テキスト</button>
-                <button type="button" class="mode-tab" data-mode="draw">✏ 手書き</button>
-            </div>
-            <div id="text-area">
-                <textarea id="answerInput" class="flip-input" maxlength="200" placeholder="自由に入力してね"></textarea>
-            </div>
-            <div id="draw-area" hidden>
-                <div class="draw-tools">
-                    <div class="tool-group" id="color-tools"></div>
-                    <div class="tool-sep"></div>
-                    <div class="tool-group" id="width-tools"></div>
-                    <div class="tool-sep"></div>
-                    <div class="tool-group">
-                        <button type="button" class="tool-btn" id="undo-btn">↶ 戻す</button>
-                        <button type="button" class="tool-btn" id="clear-btn">🗑 全部消す</button>
-                    </div>
+        <!-- ① お題を出す画面 -->
+        <section class="screen" id="screen-question" hidden>
+            <div class="flip-panel">
+                <h2 class="screen-title">第<span class="round-no"></span>問のお題を出そう</h2>
+                <div class="input-group">
+                    <label for="questionInput">お題</label>
+                    <input type="text" id="questionInput" class="flip-input" maxlength="100" placeholder="例: 好きな食べ物は？">
                 </div>
-                <canvas id="drawCanvas" class="draw-canvas"></canvas>
+                <button class="btn" id="set-question-btn" style="width: 100%; background-color: var(--secondary);">このお題で回答スタート！</button>
+                <p class="screen-note">お題を決めると、全員が回答画面に進みます</p>
             </div>
-            <div class="row" style="margin-top: 12px;">
-                <button class="btn grow" id="submit-btn" style="background-color: var(--primary);">回答を送信</button>
+            <div class="flip-panel">
+                <h3>参加しているメンバー（<span id="member-count"></span>人）</h3>
+                <ul class="member-list" id="member-list"></ul>
             </div>
-            <div class="my-answer-status" id="my-answer-status"></div>
-        </div>
+        </section>
 
-        <div class="flip-panel">
-            <h3>みんなのフリップ</h3>
-            <div class="progress-text" id="progress-text"></div>
-            <div class="controls">
-                <button class="btn btn-sm" id="reveal-all-btn" style="background-color: var(--primary);">一斉にオープン！</button>
-                <button class="btn btn-sm" id="hide-all-btn" style="background-color: #94a3b8;">全部ふせる</button>
-                <button class="btn btn-sm" id="next-round-btn" style="background-color: var(--secondary);">次のお題へ（回答リセット）</button>
+        <!-- ② 回答画面 -->
+        <section class="screen" id="screen-answer" hidden>
+            <div class="question-display">
+                <div class="question-label">お題 (第<span class="round-no"></span>問)</div>
+                <div class="question-text" id="answer-question"></div>
             </div>
-            <p class="progress-text" style="font-size: 13px; margin-top: 12px;">カードをタップすると1人ずつオープンできます</p>
-            <div class="cards-grid" id="cards-grid"></div>
-        </div>
+
+            <div class="flip-panel">
+                <h3>あなたの回答</h3>
+                <div class="mode-tabs" id="mode-tabs">
+                    <button type="button" class="mode-tab" data-mode="text">⌨ テキスト</button>
+                    <button type="button" class="mode-tab" data-mode="draw">✏ 手書き</button>
+                </div>
+                <div id="text-area">
+                    <textarea id="answerInput" class="flip-input" maxlength="200" placeholder="自由に入力してね"></textarea>
+                </div>
+                <div id="draw-area" hidden>
+                    <div class="draw-tools">
+                        <div class="tool-group" id="color-tools"></div>
+                        <div class="tool-sep"></div>
+                        <div class="tool-group" id="width-tools"></div>
+                        <div class="tool-sep"></div>
+                        <div class="tool-group">
+                            <button type="button" class="tool-btn" id="undo-btn">↶ 戻す</button>
+                            <button type="button" class="tool-btn" id="clear-btn">🗑 全部消す</button>
+                        </div>
+                    </div>
+                    <canvas id="drawCanvas" class="draw-canvas"></canvas>
+                </div>
+                <div class="row" style="margin-top: 12px;">
+                    <button class="btn grow" id="submit-btn" style="background-color: var(--primary);">回答を送信</button>
+                </div>
+                <div class="my-answer-status" id="my-answer-status"></div>
+            </div>
+
+            <div class="flip-panel">
+                <h3>回答状況</h3>
+                <div class="progress-text" id="answer-progress"></div>
+                <ul class="member-list" id="answer-members"></ul>
+                <button class="btn" id="go-reveal-btn" style="width: 100%; margin-top: 16px; background-color: #f59e0b;">みんなのフリップへ →</button>
+                <div class="nav-links">
+                    <button class="link-btn" id="back-question-btn">← お題を変更する</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ③ みんなのフリップ画面 -->
+        <section class="screen" id="screen-reveal" hidden>
+            <div class="question-display">
+                <div class="question-label">お題 (第<span class="round-no"></span>問)</div>
+                <div class="question-text" id="reveal-question"></div>
+            </div>
+
+            <div class="flip-panel">
+                <h3>みんなのフリップ</h3>
+                <div class="progress-text" id="progress-text"></div>
+                <div class="controls">
+                    <button class="btn btn-sm" id="reveal-all-btn" style="background-color: var(--primary);">一斉にオープン！</button>
+                    <button class="btn btn-sm" id="hide-all-btn" style="background-color: #94a3b8;">全部ふせる</button>
+                </div>
+                <p class="progress-text" style="font-size: 13px; margin-top: 12px;">カードをタップすると1人ずつオープンできます</p>
+                <div class="cards-grid" id="cards-grid"></div>
+            </div>
+
+            <button class="btn" id="next-round-btn" style="width: 100%; background-color: var(--secondary);">次のお題へ →</button>
+            <div class="nav-links">
+                <button class="link-btn" id="back-answer-btn">← 回答画面にもどる</button>
+            </div>
+        </section>
     </template>
 
     <div class="sync-status" id="sync-status">オフライン</div>

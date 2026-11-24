@@ -17,6 +17,7 @@ const flipApp = {
     phase: 'lobby',
     renderedPhase: '',
     renderedRound: null,
+    renderedStage: null,
     syncTimer: null,
     syncing: false,
     syncAgain: false,
@@ -56,6 +57,18 @@ const flipApp = {
         return this.state.players[this.playerName];
     },
 
+    // 今いる画面: 'question' (お題) → 'answer' (回答) → 'reveal' (みんなのフリップ)
+    currentStage() {
+        const st = this.state.stage;
+        if (st && st.round === this.state.round && ['question', 'answer', 'reveal'].includes(st.name)) return st.name;
+        // 画面情報がない場合は、お題があれば回答画面から
+        return this.currentQuestion() ? 'answer' : 'question';
+    },
+
+    setStage(name) {
+        this.state.stage = { name, round: this.state.round, at: this.now() };
+    },
+
     currentQuestion() {
         const q = this.state.question;
         return q && q.round === this.state.round ? q.text : '';
@@ -71,6 +84,7 @@ const flipApp = {
             container.appendChild(tpl.content.cloneNode(true));
             this.renderedPhase = this.phase;
             this.renderedRound = null;
+            this.renderedStage = null;
             this.bindEvents();
         }
         if (this.phase === 'room') this.renderRoom();
@@ -96,6 +110,9 @@ const flipApp = {
 
         on('leave-btn', 'click', () => this.leaveRoom());
         on('set-question-btn', 'click', () => this.setQuestion());
+        on('go-reveal-btn', 'click', () => this.goReveal());
+        on('back-question-btn', 'click', () => this.goStage('question'));
+        on('back-answer-btn', 'click', () => this.goStage('answer'));
         on('questionInput', 'keydown', e => {
             if (e.key === 'Enter' && !e.isComposing) this.setQuestion();
         });
@@ -203,12 +220,16 @@ const flipApp = {
     renderRoom() {
         document.getElementById('display-room-id').textContent = this.roomId;
         document.getElementById('display-name').textContent = this.playerName;
-        document.getElementById('round-label').textContent = `(第${this.state.round}問)`;
+        document.querySelectorAll('.round-no').forEach(el => { el.textContent = this.state.round; });
 
         const q = this.currentQuestion();
-        const qEl = document.getElementById('display-question');
-        qEl.textContent = q || 'お題はまだありません（下の欄から設定できます）';
-        qEl.classList.toggle('empty', !q);
+        ['answer-question', 'reveal-question'].forEach(id => {
+            const el = document.getElementById(id);
+            el.textContent = q || '（お題なし）';
+            el.classList.toggle('empty', !q);
+        });
+
+        this.renderStage();
 
         // ラウンドが変わったら回答欄を初期化
         const answerEl = document.getElementById('answerInput');
@@ -231,6 +252,14 @@ const flipApp = {
         const players = this.activePlayers();
         const answered = players.filter(p => this.hasAnswer(p));
         const opened = answered.filter(p => this.isOpen(p.name));
+
+        // お題画面: メンバー一覧
+        document.getElementById('member-count').textContent = players.length;
+        this.renderMembers('member-list', players, () => true);
+        // 回答画面: 回答状況
+        document.getElementById('answer-progress').textContent = `回答済み ${answered.length} / ${players.length} 人`;
+        this.renderMembers('answer-members', players, p => this.hasAnswer(p), p => (this.hasAnswer(p) ? '✔ ' : '… '));
+
         document.getElementById('progress-text').textContent =
             `回答済み ${answered.length} / ${players.length} 人　・　オープン ${opened.length} 枚`;
 
@@ -239,6 +268,44 @@ const flipApp = {
 
         this.renderMyStatus();
         this.renderCards(players);
+    },
+
+    renderStage() {
+        const stage = this.currentStage();
+        const order = ['question', 'answer', 'reveal'];
+        document.querySelectorAll('#steps li').forEach(li => {
+            const i = order.indexOf(li.dataset.stage);
+            li.classList.toggle('active', li.dataset.stage === stage);
+            li.classList.toggle('done', i < order.indexOf(stage));
+        });
+        if (this.renderedStage === stage) return;
+
+        order.forEach(name => {
+            const el = document.getElementById('screen-' + name);
+            el.hidden = name !== stage;
+            el.classList.remove('enter');
+        });
+        const shown = document.getElementById('screen-' + stage);
+        void shown.offsetWidth; // アニメーションを再生し直す
+        shown.classList.add('enter');
+        if (this.renderedStage) window.scrollTo({ top: 0, behavior: 'smooth' });
+        this.renderedStage = stage;
+
+        // 回答画面に戻ってきたらキャンバスの大きさを合わせ直す
+        if (stage === 'answer') this.renderAnswerMode();
+    },
+
+    renderMembers(id, players, isOk, prefix = () => '') {
+        const ul = document.getElementById(id);
+        ul.textContent = '';
+        players.forEach(p => {
+            const li = document.createElement('li');
+            li.className = 'member-chip';
+            li.classList.toggle('ok', isOk(p));
+            li.classList.toggle('me', p.name === this.playerName);
+            li.textContent = prefix(p) + p.name + (p.name === this.playerName ? '（あなた）' : '');
+            ul.appendChild(li);
+        });
     },
 
     renderMyStatus() {
@@ -424,13 +491,32 @@ const flipApp = {
             this.startNewRound();
         }
         this.state.question = { text, round: this.state.round, at: this.now() };
+        this.setStage('answer');
         input.value = '';
         this.render();
         this.sync();
     },
 
+    goStage(name) {
+        this.setStage(name);
+        this.render();
+        this.sync();
+    },
+
+    goReveal() {
+        const players = this.activePlayers();
+        const waiting = players.filter(p => !this.hasAnswer(p));
+        if (waiting.length > 0) {
+            const names = waiting.map(p => p.name).join('、');
+            if (!confirm(`まだ回答していない人がいます（${names}）。\nみんなのフリップへ進みますか？`)) return;
+        }
+        this.goStage('reveal');
+    },
+
     nextRound() {
-        if (!confirm('全員の回答をリセットして次のお題へ進みますか？')) return;
+        const answered = this.activePlayers().filter(p => this.hasAnswer(p));
+        const closed = answered.filter(p => !this.isOpen(p.name));
+        if (closed.length > 0 && !confirm(`まだオープンしていないフリップが${closed.length}枚あります。\n次のお題へ進みますか？`)) return;
         this.startNewRound();
         this.render();
         this.sync();
@@ -439,6 +525,7 @@ const flipApp = {
     startNewRound() {
         this.state.round += 1;
         this.state.reveal = {};
+        this.setStage('question');
         // 自分の回答だけは自分で消しておく (他の人の分は round が古いので自動的に無効になる)
         const me = this.me();
         if (me) {
