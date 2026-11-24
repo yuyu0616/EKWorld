@@ -1,75 +1,12 @@
 /**
  * フリップツール
  *
- * ito と同じ Google Apps Script (GAS) をデータ保存先として使います。
- * ルームIDには "flip_" を付けて保存するので、ito のルームとは混ざりません。
- *
- * 同期のしくみ:
- *   GAS はルーム単位で状態をまるごと上書き保存するだけなので、複数人が同時に
- *   書き込むと誰かの変更が消えることがあります。そこで各項目に更新時刻 (at) を持たせ、
- *   「サーバーの状態」と「手元の状態」を毎回マージ (新しい方を採用) してから書き戻します。
- *   一度消えた変更も、次の同期で持ち主が書き戻すので、最終的に全員の状態がそろいます。
+ * 同期には Netlify Functions (/api/flip) と Netlify Blobs を使います。
+ * 状態のマージ処理は flip_merge.js にあります。
  */
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwm339wSwgi1LzAToywYfv8M6fQZ_YZZ8cJWU_bDY4s_KQI4-CCb7T2jubgPOomukF1/exec";
-const ROOM_PREFIX = "flip_";
-const SYNC_INTERVAL_MS = 1500;
-
-// ---------- 状態のマージ ----------
-
-function emptyState() {
-    return { round: 1, question: null, players: {}, reveal: {} };
-}
-
-function normalize(s) {
-    const base = emptyState();
-    if (!s || typeof s !== 'object') return base;
-    return {
-        round: Number(s.round) || 1,
-        question: s.question && typeof s.question === 'object' ? s.question : null,
-        players: s.players && typeof s.players === 'object' ? s.players : {},
-        reveal: s.reveal && typeof s.reveal === 'object' ? s.reveal : {}
-    };
-}
-
-// キー順に依存しない文字列化 (比較用)
-function canon(v) {
-    if (v === null || typeof v !== 'object') return JSON.stringify(v);
-    if (Array.isArray(v)) return '[' + v.map(canon).join(',') + ']';
-    return '{' + Object.keys(v).sort().map(k => JSON.stringify(k) + ':' + canon(v[k])).join(',') + '}';
-}
-
-// 新しい方を採用 (Last Write Wins)
-function lww(a, b) {
-    if (!a) return b || null;
-    if (!b) return a;
-    if ((a.at || 0) !== (b.at || 0)) return (a.at || 0) > (b.at || 0) ? a : b;
-    return canon(a) >= canon(b) ? a : b;
-}
-
-function mergeMaps(a, b) {
-    const out = {};
-    new Set([...Object.keys(a), ...Object.keys(b)]).forEach(k => {
-        out[k] = lww(a[k], b[k]);
-    });
-    return out;
-}
-
-function mergeState(x, y) {
-    const a = normalize(x);
-    const b = normalize(y);
-    const round = Math.max(a.round, b.round);
-    const reveal = mergeMaps(a.reveal, b.reveal);
-    // 古いラウンドのオープン情報は不要なので捨てる
-    Object.keys(reveal).forEach(k => {
-        if ((reveal[k].round || 0) < round) delete reveal[k];
-    });
-    return {
-        round,
-        question: lww(a.question, b.question),
-        players: mergeMaps(a.players, b.players),
-        reveal
-    };
-}
+const { emptyState, normalize, canon, mergeState } = window.FlipMerge;
+const API_URL = '/api/flip';
+const SYNC_INTERVAL_MS = 2000;
 
 // ---------- アプリ本体 ----------
 
@@ -144,7 +81,7 @@ const flipApp = {
         if (this.phase === 'lobby') {
             const nameEl = document.getElementById('playerName');
             const roomEl = document.getElementById('roomId');
-            nameEl.value = this.safeGet('flipPlayerName') || this.safeGet('itoPlayerName') || '';
+            nameEl.value = this.safeGet('flipPlayerName') || '';
             roomEl.value = this.safeGet('flipRoomId') || '';
             on('join-btn', 'click', () => this.joinRoom());
             [nameEl, roomEl].forEach(el => el.addEventListener('keydown', e => {
@@ -344,8 +281,7 @@ const flipApp = {
         const me = this.me();
         if (me) {
             this.state.players[this.playerName] = { ...me, left: true, at: this.now() };
-            const server = await this.fetchState();
-            if (server !== undefined) await this.pushState(mergeState(this.state, server));
+            await this.pushState(this.state);
         }
         this.roomId = '';
         this.phase = 'lobby';
@@ -427,7 +363,10 @@ const flipApp = {
 
     startSync() {
         this.stopSync();
-        this.syncTimer = setInterval(() => this.sync(), SYNC_INTERVAL_MS);
+        // タブが裏にある間は通信しない (関数の呼び出し回数を節約)
+        this.syncTimer = setInterval(() => {
+            if (!document.hidden) this.sync();
+        }, SYNC_INTERVAL_MS);
     },
 
     stopSync() {
@@ -436,7 +375,7 @@ const flipApp = {
     },
 
     /**
-     * サーバーの状態を取得 → 手元とマージ → 差分があれば書き戻す
+     * サーバーの状態を取得 → 手元とマージ → 差分があれば送信 (サーバー側でもマージされる)
      * 同時に呼ばれた場合は、今の同期が終わったあとにもう一度実行する
      */
     async sync() {
@@ -450,14 +389,18 @@ const flipApp = {
         try {
             do {
                 this.syncAgain = false;
-                const server = await this.fetchState();
+                let server = await this.fetchState();
                 if (server === undefined || roomId !== this.roomId) break;
-                const merged = mergeState(this.state, server);
+                let merged = mergeState(this.state, server);
+                if (server === null || canon(merged) !== canon(normalize(server))) {
+                    const saved = await this.pushState(merged);
+                    if (roomId !== this.roomId) break;
+                    if (saved) merged = mergeState(merged, saved);
+                }
+                // 通信中に行われた手元の操作も取りこぼさないようにマージ
+                merged = mergeState(this.state, merged);
                 const changedLocal = canon(merged) !== canon(normalize(this.state));
                 this.state = merged;
-                if (server === null || canon(merged) !== canon(normalize(server))) {
-                    await this.pushState(merged);
-                }
                 if (changedLocal && this.phase === 'room') this.render();
             } while (this.syncAgain);
         } finally {
@@ -468,12 +411,11 @@ const flipApp = {
     // 成功: 状態オブジェクト / ルームなし: null / 通信失敗: undefined
     async fetchState() {
         try {
-            const res = await fetch(`${GAS_URL}?roomId=${encodeURIComponent(ROOM_PREFIX + this.roomId)}`);
-            let data = await res.json();
-            if (typeof data === 'string') data = JSON.parse(data);
+            const res = await fetch(`${API_URL}?roomId=${encodeURIComponent(this.roomId)}`, { cache: 'no-store' });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
             this.setSyncStatus('オンライン');
-            if (!data || data.status === 'not_found' || data.error) return null;
-            return data;
+            return data || null;
         } catch (e) {
             console.error(e);
             this.setSyncStatus('通信エラー', true);
@@ -481,16 +423,20 @@ const flipApp = {
         }
     },
 
-    async pushState(gameState) {
+    // 成功: サーバーでマージされた状態 / 失敗: null
+    async pushState(state) {
         try {
-            await fetch(GAS_URL, {
+            const res = await fetch(API_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'text/plain' }, // CORS回避
-                body: JSON.stringify({ roomId: ROOM_PREFIX + this.roomId, gameState })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ roomId: this.roomId, state })
             });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return await res.json();
         } catch (e) {
             console.error(e);
             this.setSyncStatus('通信エラー', true);
+            return null;
         }
     },
 
@@ -510,3 +456,7 @@ const flipApp = {
 };
 
 window.addEventListener('DOMContentLoaded', () => flipApp.init());
+
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) flipApp.sync();
+});
