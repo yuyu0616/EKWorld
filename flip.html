@@ -130,7 +130,7 @@
         }
         .flip-card {
             perspective: 1000px;
-            min-height: 170px;
+            min-height: 190px;
             cursor: pointer;
             position: relative;
         }
@@ -139,7 +139,7 @@
             position: relative;
             width: 100%;
             height: 100%;
-            min-height: 170px;
+            min-height: 190px;
             transition: transform 0.7s cubic-bezier(0.34, 1.4, 0.64, 1);
             transform-style: preserve-3d;
         }
@@ -212,6 +212,85 @@
             overflow-y: auto;
         }
         .card-answer.long { font-size: 17px; }
+        .card-answer { min-height: 0; }
+        .card-answer.drawing { padding: 6px; overflow: hidden; }
+        .drawing-svg { width: 100%; height: 100%; display: block; }
+
+        /* 回答方法の切り替え */
+        .mode-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .mode-tab {
+            flex: 1;
+            font-family: inherit;
+            font-weight: 800;
+            font-size: 16px;
+            padding: 10px;
+            border: 3px solid var(--text-color);
+            border-radius: 12px;
+            background: var(--white);
+            color: var(--text-color);
+            cursor: pointer;
+        }
+        .mode-tab.active {
+            background: var(--accent);
+            box-shadow: 3px 3px 0 var(--text-color);
+        }
+        .mode-tab:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* 手書き */
+        .draw-tools {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .tool-group { display: flex; gap: 6px; align-items: center; }
+        .tool-sep { width: 2px; height: 28px; background: #e2e8f0; }
+        .color-btn, .width-btn, .tool-btn {
+            border: 3px solid var(--text-color);
+            background: var(--white);
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 800;
+            color: var(--text-color);
+        }
+        .color-btn {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            padding: 0;
+        }
+        .width-btn {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            padding: 0;
+        }
+        .width-btn span { display: block; background: var(--text-color); border-radius: 50%; }
+        .color-btn.active, .width-btn.active {
+            outline: 3px solid var(--secondary);
+            outline-offset: 2px;
+        }
+        .tool-btn {
+            border-radius: 10px;
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+        .draw-tools button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .draw-canvas {
+            display: block;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            border: 3px solid var(--text-color);
+            border-radius: 12px;
+            background: #fff;
+            cursor: crosshair;
+            box-sizing: border-box;
+        }
+        .draw-canvas.locked { cursor: not-allowed; opacity: 0.8; }
         .card-answer.empty { color: #94a3b8; font-size: 16px; }
         .me-badge {
             display: inline-block;
@@ -312,7 +391,26 @@
 
         <div class="flip-panel">
             <h3>あなたの回答</h3>
-            <textarea id="answerInput" class="flip-input" maxlength="200" placeholder="自由に入力してね"></textarea>
+            <div class="mode-tabs" id="mode-tabs">
+                <button type="button" class="mode-tab" data-mode="text">⌨ テキスト</button>
+                <button type="button" class="mode-tab" data-mode="draw">✏ 手書き</button>
+            </div>
+            <div id="text-area">
+                <textarea id="answerInput" class="flip-input" maxlength="200" placeholder="自由に入力してね"></textarea>
+            </div>
+            <div id="draw-area" hidden>
+                <div class="draw-tools">
+                    <div class="tool-group" id="color-tools"></div>
+                    <div class="tool-sep"></div>
+                    <div class="tool-group" id="width-tools"></div>
+                    <div class="tool-sep"></div>
+                    <div class="tool-group">
+                        <button type="button" class="tool-btn" id="undo-btn">↶ 戻す</button>
+                        <button type="button" class="tool-btn" id="clear-btn">🗑 全部消す</button>
+                    </div>
+                </div>
+                <canvas id="drawCanvas" class="draw-canvas"></canvas>
+            </div>
             <div class="row" style="margin-top: 12px;">
                 <button class="btn grow" id="submit-btn" style="background-color: var(--primary);">回答を送信</button>
             </div>
@@ -335,6 +433,7 @@
     <div class="sync-status" id="sync-status">オフライン</div>
 
     <script src="flip_merge.js"></script>
+    <script src="flip_draw.js"></script>
     <script src="flip.js"></script>
 </body>
 </html>

@@ -113,8 +113,8 @@ export default async (req) => {
         const action = actions[body.action];
         if (!action) return json({ error: 'invalid action' }, 400);
         try {
-            const state = await atomicUpdate(store, key, current => action(current, body));
-            return json(state);
+            const { data } = await atomicUpdate(store, key, current => action(current, body));
+            return json(data);
         } catch (e) {
             if (e instanceof ActionError) return json({ error: e.message }, 400);
             throw e;

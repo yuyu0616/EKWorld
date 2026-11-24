@@ -2,7 +2,7 @@
  * フリップツール
  *
  * 同期には Netlify Functions (/api/flip) と Netlify Blobs を使います。
- * 状態のマージ処理は flip_merge.js にあります。
+ * 状態のマージ処理は flip_merge.js、手書き機能は flip_draw.js にあります。
  */
 const { emptyState, normalize, canon, mergeState } = window.FlipMerge;
 const API_URL = '/api/flip';
@@ -20,9 +20,13 @@ const flipApp = {
     syncTimer: null,
     syncing: false,
     syncAgain: false,
-    lastSyncOk: true,
+    serverEtag: null,   // 最後に受け取ったサーバー状態の版 (変化がなければ中身の再送を省く)
+    serverState: null,
+    answerMode: 'text', // 'text' | 'draw'
+    pad: null,
 
     init() {
+        this.answerMode = this.safeGet('flipAnswerMode') === 'draw' ? 'draw' : 'text';
         this.render();
     },
 
@@ -97,6 +101,11 @@ const flipApp = {
         });
         on('submit-btn', 'click', () => this.submitAnswer());
         on('answerInput', 'input', () => this.renderMyStatus());
+        on('mode-tabs', 'click', e => {
+            const tab = e.target.closest('.mode-tab');
+            if (tab && !tab.disabled) this.setAnswerMode(tab.dataset.mode);
+        });
+        this.setupDrawTools();
         on('reveal-all-btn', 'click', () => this.setAllOpen(true));
         on('hide-all-btn', 'click', () => this.setAllOpen(false));
         on('next-round-btn', 'click', () => this.nextRound());
@@ -104,6 +113,91 @@ const flipApp = {
             const card = e.target.closest('.flip-card');
             if (card && !card.classList.contains('disabled')) this.toggleCard(card.dataset.name);
         });
+    },
+
+    setupDrawTools() {
+        this.pad = new FlipDraw.Pad(document.getElementById('drawCanvas'), {
+            onChange: () => this.renderMyStatus(),
+            onLimit: () => this.showLimitNotice()
+        });
+
+        const colorTools = document.getElementById('color-tools');
+        FlipDraw.COLORS.forEach((c, i) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'color-btn' + (i === 0 ? ' active' : '');
+            b.style.backgroundColor = c;
+            b.title = '色';
+            b.addEventListener('click', () => {
+                this.pad.color = c;
+                colorTools.querySelectorAll('.color-btn').forEach(x => x.classList.toggle('active', x === b));
+            });
+            colorTools.appendChild(b);
+        });
+
+        const widthTools = document.getElementById('width-tools');
+        FlipDraw.WIDTHS.forEach(w => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'width-btn' + (w === this.pad.width ? ' active' : '');
+            b.title = '太さ';
+            const dot = document.createElement('span');
+            const size = Math.max(4, Math.round(w * 1.3));
+            dot.style.width = dot.style.height = size + 'px';
+            b.appendChild(dot);
+            b.addEventListener('click', () => {
+                this.pad.width = w;
+                widthTools.querySelectorAll('.width-btn').forEach(x => x.classList.toggle('active', x === b));
+            });
+            widthTools.appendChild(b);
+        });
+
+        document.getElementById('undo-btn').addEventListener('click', () => this.pad.undo());
+        document.getElementById('clear-btn').addEventListener('click', () => {
+            if (this.pad.strokes.length && confirm('手書きを全部消しますか？')) this.pad.clear();
+        });
+    },
+
+    setAnswerMode(mode) {
+        this.answerMode = mode === 'draw' ? 'draw' : 'text';
+        this.safeSet('flipAnswerMode', this.answerMode);
+        this.renderAnswerMode();
+        this.renderMyStatus();
+    },
+
+    renderAnswerMode() {
+        document.querySelectorAll('#mode-tabs .mode-tab').forEach(t => {
+            t.classList.toggle('active', t.dataset.mode === this.answerMode);
+        });
+        document.getElementById('text-area').hidden = this.answerMode !== 'text';
+        document.getElementById('draw-area').hidden = this.answerMode !== 'draw';
+        // 非表示の間はサイズが取れないので、表示したときに合わせ直す
+        if (this.answerMode === 'draw' && this.pad) this.pad.resize();
+    },
+
+    showLimitNotice() {
+        const status = document.getElementById('my-answer-status');
+        status.textContent = '⚠ これ以上は書き込めません（「戻す」か「全部消す」で減らしてね）';
+        status.classList.add('warn');
+    },
+
+    // 入力中の回答
+    draftAnswer() {
+        if (this.answerMode === 'draw') {
+            return { kind: 'draw', answer: '', drawing: this.pad ? this.pad.getStrokes() : [] };
+        }
+        const el = document.getElementById('answerInput');
+        return { kind: 'text', answer: el ? el.value.trim() : '', drawing: null };
+    },
+
+    isDraftEmpty(d) {
+        return d.kind === 'draw' ? d.drawing.length === 0 : !d.answer;
+    },
+
+    sameAnswer(d, p) {
+        const kind = p.kind === 'draw' ? 'draw' : 'text';
+        if (d.kind !== kind) return false;
+        return kind === 'draw' ? canon(d.drawing) === canon(p.drawing || []) : d.answer === p.answer;
     },
 
     renderRoom() {
@@ -120,7 +214,17 @@ const flipApp = {
         const answerEl = document.getElementById('answerInput');
         if (this.renderedRound !== this.state.round) {
             const me = this.me();
-            answerEl.value = this.hasAnswer(me) ? me.answer : '';
+            const mine = this.hasAnswer(me) ? me : null;
+            if (mine && mine.kind === 'draw') {
+                answerEl.value = '';
+                this.pad.setStrokes(mine.drawing);
+                this.answerMode = 'draw';
+            } else {
+                answerEl.value = mine ? mine.answer : '';
+                this.pad.setStrokes([]);
+                if (mine) this.answerMode = 'text';
+            }
+            this.renderAnswerMode();
             this.renderedRound = this.state.round;
         }
 
@@ -146,6 +250,11 @@ const flipApp = {
 
         const myOpen = this.isOpen(this.playerName);
         answerEl.disabled = myOpen;
+        if (this.pad) {
+            this.pad.enabled = !myOpen;
+            document.getElementById('drawCanvas').classList.toggle('locked', myOpen);
+        }
+        document.querySelectorAll('#mode-tabs .mode-tab, #draw-area button').forEach(b => { b.disabled = myOpen; });
         status.classList.remove('warn');
 
         if (myOpen) {
@@ -157,7 +266,7 @@ const flipApp = {
         btn.disabled = false;
         if (this.hasAnswer(me)) {
             btn.textContent = '回答を更新';
-            if (answerEl.value.trim() !== me.answer) {
+            if (!this.sameAnswer(this.draftAnswer(), me)) {
                 status.textContent = '⚠ 変更がまだ送信されていません';
                 status.classList.add('warn');
             } else {
@@ -202,9 +311,19 @@ const flipApp = {
 
             const ans = card.querySelector('.card-answer');
             // 中身はオープン時だけ入れる (ふせている間に覗けないように)
-            const text = open ? p.answer : '';
-            if (ans.textContent !== text) ans.textContent = text;
-            ans.classList.toggle('long', text.length > 20);
+            const isDrawing = open && p.kind === 'draw';
+            const key = open ? `${p.kind || 'text'}:${p.at}` : '';
+            if (ans.dataset.key !== key) {
+                ans.dataset.key = key;
+                ans.textContent = '';
+                if (isDrawing) {
+                    ans.appendChild(FlipDraw.toSVG(p.drawing));
+                } else if (open) {
+                    ans.textContent = p.answer;
+                }
+            }
+            ans.classList.toggle('drawing', isDrawing);
+            ans.classList.toggle('long', !isDrawing && open && (p.answer || '').length > 20);
         });
 
         Object.values(existing).forEach(el => el.remove());
@@ -246,6 +365,8 @@ const flipApp = {
 
         this.roomId = roomId;
         this.playerName = name;
+        this.serverEtag = null;
+        this.serverState = null;
         this.safeSet('flipPlayerName', name);
         this.safeSet('flipRoomId', roomId);
 
@@ -321,20 +442,22 @@ const flipApp = {
         // 自分の回答だけは自分で消しておく (他の人の分は round が古いので自動的に無効になる)
         const me = this.me();
         if (me) {
-            this.state.players[this.playerName] = { ...me, answer: '', submitted: false, round: this.state.round, at: this.now() };
+            this.state.players[this.playerName] = {
+                ...me, kind: 'text', answer: '', drawing: null, submitted: false, round: this.state.round, at: this.now()
+            };
         }
     },
 
     submitAnswer() {
-        const answer = document.getElementById('answerInput').value.trim();
-        if (!answer) {
-            alert('回答を入力してください！');
+        const draft = this.draftAnswer();
+        if (this.isDraftEmpty(draft)) {
+            alert(draft.kind === 'draw' ? '手書きで回答を書いてください！' : '回答を入力してください！');
             return;
         }
         if (this.isOpen(this.playerName)) return;
         const me = this.me() || { joinedAt: this.now() };
         this.state.players[this.playerName] = {
-            ...me, answer, submitted: true, round: this.state.round, left: false, at: this.now()
+            ...me, ...draft, submitted: true, round: this.state.round, left: false, at: this.now()
         };
         this.render();
         this.sync();
@@ -409,13 +532,19 @@ const flipApp = {
     },
 
     // 成功: 状態オブジェクト / ルームなし: null / 通信失敗: undefined
+    // 前回から変化がなければ、サーバーは中身を送らず unchanged だけ返す
     async fetchState() {
         try {
-            const res = await fetch(`${API_URL}?roomId=${encodeURIComponent(this.roomId)}`, { cache: 'no-store' });
+            let url = `${API_URL}?roomId=${encodeURIComponent(this.roomId)}`;
+            if (this.serverEtag && this.serverState) url += `&since=${encodeURIComponent(this.serverEtag)}`;
+            const res = await fetch(url, { cache: 'no-store' });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
             this.setSyncStatus('オンライン');
-            return data || null;
+            if (data && data.unchanged && this.serverState) return this.serverState;
+            this.serverEtag = (data && data.etag) || null;
+            this.serverState = (data && data.state) || null;
+            return this.serverState;
         } catch (e) {
             console.error(e);
             this.setSyncStatus('通信エラー', true);
@@ -432,7 +561,10 @@ const flipApp = {
                 body: JSON.stringify({ roomId: this.roomId, state })
             });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            return await res.json();
+            const data = await res.json();
+            this.serverEtag = data.etag || null;
+            this.serverState = data.state || null;
+            return this.serverState;
         } catch (e) {
             console.error(e);
             this.setSyncStatus('通信エラー', true);

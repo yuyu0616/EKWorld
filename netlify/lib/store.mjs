@@ -28,6 +28,7 @@ export async function readJSON(store, key) {
  * 読み込み → 変更 → 書き込み を安全に行う。
  * 途中で他の人が書き込んでいたら (ETag不一致) 最初からやり直すので、同時操作でもデータが壊れない。
  * fn(現在の状態 or null) は新しい状態を返す。
+ * 戻り値: { data: 保存した状態, etag: 保存後の版 }
  */
 export async function atomicUpdate(store, key, fn, retries = 10) {
     for (let i = 0; i < retries; i++) {
@@ -37,7 +38,7 @@ export async function atomicUpdate(store, key, fn, retries = 10) {
         const res = entry
             ? await store.setJSON(key, next, { onlyIfMatch: entry.etag })
             : await store.setJSON(key, next, { onlyIfNew: true });
-        if (res.modified) return next;
+        if (res.modified) return { data: next, etag: res.etag || null };
         await new Promise(r => setTimeout(r, 30 + Math.random() * 120));
     }
     throw new Error('too many concurrent updates');
