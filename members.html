@@ -20,9 +20,9 @@
         flex: 1 1 200px;
         max-width: 250px;
         background-color: var(--white);
-        border: 4px solid var(--text-color);
+        border: 1px solid var(--line);
         border-radius: 20px;
-        box-shadow: 6px 6px 0px var(--text-color);
+        box-shadow: var(--shadow-md);
         padding: 20px;
         text-align: center;
         cursor: pointer;
@@ -31,18 +31,18 @@
       }
       .member-card:hover {
         transform: translate(-4px, -4px);
-        box-shadow: 10px 10px 0px var(--primary);
+        box-shadow: var(--shadow-lg);
       }
       .member-card:active {
         transform: translate(2px, 2px);
-        box-shadow: 4px 4px 0px var(--primary);
+        box-shadow: var(--shadow-md);
       }
       .member-icon {
         width: 100px;
         height: 100px;
         border-radius: 50%;
         background-color: var(--secondary);
-        border: 4px solid var(--text-color);
+        border: 1px solid var(--line);
         margin: 0 auto 16px auto;
         display: flex;
         align-items: center;
@@ -69,8 +69,8 @@
         background: #f1f5f9;
         padding: 12px;
         border-radius: 12px;
-        border: 3px solid var(--text-color);
-        box-shadow: 3px 3px 0px var(--text-color);
+        border: 2px solid var(--line-strong);
+        box-shadow: var(--shadow-sm);
         font-weight: 700;
         transition: transform 0.2s;
       }
@@ -101,7 +101,7 @@
           width: 80px;
           height: 80px;
           border-radius: 50%;
-          border: 4px solid var(--text-color);
+          border: 1px solid var(--line);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -120,7 +120,7 @@
     </style>
   </head>
   <body>
-    <a href="index.html" class="back-btn">← メニューへ戻る</a>
+    <a href="index.html" class="back-btn">← メニュー</a>
     
     <div id="app">
         <h1>メンバー一覧</h1>
@@ -138,7 +138,7 @@
                 <h2 id="modal-name" style="margin: 0; color: var(--text-color); font-size: 32px; letter-spacing: 2px;"></h2>
             </div>
             
-            <div class="chart-wrapper" style="background: #fff; border: 3px solid var(--text-color); border-radius: 12px; padding: 20px; box-shadow: 3px 3px 0px var(--text-color); margin: 20px auto; max-width: 320px; aspect-ratio: 1/1; box-sizing: border-box;">
+            <div class="chart-wrapper" style="background: #fff; border: 2px solid var(--line-strong); border-radius: 12px; padding: 20px; box-shadow: var(--shadow-sm); margin: 20px auto; max-width: 320px; aspect-ratio: 1/1; box-sizing: border-box;">
                 <div class="chart-container" style="position: relative; width: 100%; height: 100%;">
                     <canvas id="statusChart"></canvas>
                 </div>

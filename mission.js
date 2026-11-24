@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const randomColor = colors[Math.floor(Math.random() * colors.length)];
                 icon.style.color = randomColor;
                 item.style.borderColor = randomColor;
-                item.style.boxShadow = `4px 4px 0px ${randomColor}`;
+                item.style.boxShadow = `0 8px 24px ${randomColor}66`;
             } else {
                 icon.style.color = '';
                 item.style.borderColor = '';

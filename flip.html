@@ -16,9 +16,9 @@
         }
         .flip-panel {
             background-color: var(--white);
-            border: 4px solid var(--text-color);
+            border: 1px solid var(--line);
             border-radius: 20px;
-            box-shadow: 6px 6px 0px var(--text-color);
+            box-shadow: var(--shadow-md);
             padding: 24px;
             box-sizing: border-box;
             animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -36,7 +36,7 @@
         }
         .flip-input {
             padding: 12px 16px;
-            border: 3px solid var(--text-color);
+            border: 2px solid var(--line-strong);
             border-radius: 12px;
             font-size: 18px;
             font-family: inherit;
@@ -93,8 +93,8 @@
             color: var(--white);
             padding: 16px 20px;
             border-radius: 16px;
-            border: 3px solid var(--text-color);
-            box-shadow: 4px 4px 0px var(--text-color);
+            border: 2px solid var(--line-strong);
+            box-shadow: var(--shadow-sm);
             text-align: center;
         }
         .question-label { font-size: 14px; font-weight: 800; opacity: 0.9; }
@@ -121,25 +121,27 @@
             flex-wrap: wrap;
         }
 
-        /* フリップカード */
+        /* フリップカード
+           カードの大きさ (--card-w / --card-h) は人数と画面サイズから flip.js で計算します */
         .cards-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            justify-content: center;
             gap: 16px;
             margin-top: 16px;
         }
         .flip-card {
-            perspective: 1000px;
-            min-height: 190px;
+            perspective: 1200px;
+            height: var(--card-h, 190px);
             cursor: pointer;
             position: relative;
+            container-type: inline-size;
         }
         .flip-card.disabled { cursor: default; }
         .flip-card-inner {
             position: relative;
             width: 100%;
             height: 100%;
-            min-height: 190px;
             transition: transform 0.7s cubic-bezier(0.34, 1.4, 0.64, 1);
             transform-style: preserve-3d;
         }
@@ -149,9 +151,9 @@
             inset: 0;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
-            border: 4px solid var(--text-color);
+            border: 1px solid var(--line);
             border-radius: 16px;
-            box-shadow: 5px 5px 0px var(--text-color);
+            box-shadow: var(--shadow-md);
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -172,26 +174,27 @@
             color: #64748b;
         }
         .flip-back .mark {
-            font-size: 52px;
+            font-size: clamp(44px, 24cqw, 160px);
             font-weight: 900;
             line-height: 1;
             text-shadow: 3px 3px 0 rgba(0,0,0,0.15);
         }
-        .flip-back .status { font-size: 14px; font-weight: 800; }
+        .flip-back .status { font-size: clamp(14px, 5cqw, 28px); font-weight: 800; }
         .flip-front {
             background-color: var(--white);
             transform: rotateY(180deg);
         }
         .card-name {
             font-weight: 900;
-            font-size: 15px;
-            padding: 8px 12px;
+            font-size: clamp(14px, 5.5cqw, 30px);
+            padding: 0.45em 0.8em;
             background-color: var(--accent);
-            border-bottom: 3px solid var(--text-color);
+            border-bottom: 1px solid var(--line);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             text-align: center;
+            flex-shrink: 0;
         }
         .flip-back .card-name {
             position: absolute;
@@ -200,20 +203,108 @@
         }
         .card-answer {
             flex: 1;
+            min-height: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 12px;
+            padding: 6%;
             font-size: 24px;
             font-weight: 900;
+            line-height: 1.25;
             text-align: center;
             word-break: break-word;
+            overflow-wrap: anywhere;
             white-space: pre-wrap;
-            overflow-y: auto;
+            overflow: hidden;
+            box-sizing: border-box;
         }
-        .card-answer.long { font-size: 17px; }
-        .card-answer { min-height: 0; }
-        .card-answer.drawing { padding: 6px; overflow: hidden; }
+        .card-answer.drawing { padding: 2%; }
+        .zoom-icon {
+            position: absolute;
+            right: 8px;
+            bottom: 6px;
+            font-size: clamp(12px, 4cqw, 20px);
+            opacity: 0.45;
+            pointer-events: none;
+        }
+
+        /* フリップ画面は横幅を広く使う */
+        body.wide #app { max-width: 1240px; }
+        body.wide .flip-container { max-width: 1200px; }
+
+        /* 全画面表示 */
+        .board:fullscreen {
+            background: #f1f5f9;
+            padding: 24px;
+            overflow: auto;
+            box-sizing: border-box;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+        }
+        .board:fullscreen h3 { display: none; }
+        .board-question { display: none; }
+        .board:fullscreen .board-question {
+            display: block;
+            text-align: center;
+            font-size: clamp(22px, 3.5vw, 44px);
+            font-weight: 900;
+            color: var(--text-color);
+            margin-bottom: 8px;
+        }
+
+        /* 1枚を大きく表示 */
+        .zoom-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: rgba(15, 23, 42, 0.88);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 16px;
+            box-sizing: border-box;
+            animation: fadeIn 0.2s ease;
+        }
+        .zoom-overlay[hidden] { display: none; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .zoom-card {
+            width: min(94vw, calc((100vh - 170px) * 4 / 3), 1100px);
+            aspect-ratio: 4 / 3;
+            background: var(--white);
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            container-type: inline-size;
+            animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .zoom-card .card-name { font-size: clamp(18px, 4.5cqw, 44px); }
+        .zoom-card .card-answer { padding: 5%; }
+        .zoom-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            color: var(--white);
+            font-weight: 800;
+        }
+        .zoom-nav {
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            border: 2px solid var(--line-strong);
+            background: var(--white);
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+        .zoom-nav:disabled { opacity: 0.4; cursor: default; }
+        .zoom-pos { min-width: 60px; text-align: center; }
         .drawing-svg { width: 100%; height: 100%; display: block; }
 
         /* 回答方法の切り替え */
@@ -228,7 +319,7 @@
             font-weight: 800;
             font-size: 16px;
             padding: 10px;
-            border: 3px solid var(--text-color);
+            border: 2px solid var(--line-strong);
             border-radius: 12px;
             background: var(--white);
             color: var(--text-color);
@@ -236,7 +327,7 @@
         }
         .mode-tab.active {
             background: var(--accent);
-            box-shadow: 3px 3px 0 var(--text-color);
+            box-shadow: var(--shadow-sm);
         }
         .mode-tab:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -251,7 +342,7 @@
         .tool-group { display: flex; gap: 6px; align-items: center; }
         .tool-sep { width: 2px; height: 28px; background: #e2e8f0; }
         .color-btn, .width-btn, .tool-btn {
-            border: 3px solid var(--text-color);
+            border: 2px solid var(--line-strong);
             background: var(--white);
             cursor: pointer;
             font-family: inherit;
@@ -284,14 +375,13 @@
             display: block;
             width: 100%;
             aspect-ratio: 4 / 3;
-            border: 3px solid var(--text-color);
+            border: 2px solid var(--line-strong);
             border-radius: 12px;
             background: #fff;
             cursor: crosshair;
             box-sizing: border-box;
         }
         .draw-canvas.locked { cursor: not-allowed; opacity: 0.8; }
-        .card-answer.empty { color: #94a3b8; font-size: 16px; }
         .me-badge {
             display: inline-block;
             font-size: 11px;
@@ -330,7 +420,7 @@
             background: var(--white);
             padding: 4px 10px;
             border-radius: 20px;
-            border: 2px solid var(--text-color);
+            border: 2px solid var(--line-strong);
             opacity: 0.7;
             z-index: 10;
         }
@@ -351,10 +441,10 @@
             justify-content: center;
             gap: 6px;
             padding: 8px 4px;
-            border: 3px solid #cbd5e1;
+            border: 1px solid var(--line);
             border-radius: 50px;
-            background: var(--white);
-            color: #94a3b8;
+            background: rgba(255, 255, 255, 0.7);
+            color: #b3abc1;
             font-weight: 800;
             font-size: 15px;
         }
@@ -364,19 +454,19 @@
             justify-content: center;
             width: 22px; height: 22px;
             border-radius: 50%;
-            background: #cbd5e1;
+            background: #e3d9ea;
             color: var(--white);
             font-size: 13px;
         }
-        .steps li.done { color: var(--text-color); border-color: var(--text-color); }
-        .steps li.done .step-no { background: var(--text-color); }
+        .steps li.done { color: var(--text-color); background: var(--white); }
+        .steps li.done .step-no { background: var(--mint); }
         .steps li.active {
-            color: var(--text-color);
-            border-color: var(--text-color);
-            background: var(--accent);
-            box-shadow: 3px 3px 0 var(--text-color);
+            color: var(--white);
+            border-color: transparent;
+            background: var(--grad-primary);
+            box-shadow: 0 6px 16px rgba(255, 107, 139, 0.30);
         }
-        .steps li.active .step-no { background: var(--primary); }
+        .steps li.active .step-no { background: rgba(255, 255, 255, 0.3); }
         .screen {
             display: flex;
             flex-direction: column;
@@ -408,7 +498,7 @@
         .member-chip {
             padding: 6px 14px;
             border-radius: 50px;
-            border: 2px solid var(--text-color);
+            border: 2px solid var(--line-strong);
             font-weight: 800;
             background: #f1f5f9;
             color: #94a3b8;
@@ -417,15 +507,14 @@
         .member-chip.me { border-color: var(--secondary); }
 
         @media (max-width: 480px) {
-            .cards-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+            .cards-grid { gap: 12px; }
             .question-text { font-size: 20px; }
-            .card-answer { font-size: 20px; }
             .flip-panel { padding: 18px; }
         }
     </style>
 </head>
 <body>
-    <a href="index.html" class="back-btn">← もどる</a>
+    <a href="index.html" class="back-btn">← メニュー</a>
 
     <div id="app">
         <h1>フリップ</h1>
@@ -532,14 +621,16 @@
                 <div class="question-text" id="reveal-question"></div>
             </div>
 
-            <div class="flip-panel">
+            <div class="flip-panel board" id="board">
                 <h3>みんなのフリップ</h3>
+                <div class="board-question" id="board-question"></div>
                 <div class="progress-text" id="progress-text"></div>
                 <div class="controls">
                     <button class="btn btn-sm" id="reveal-all-btn" style="background-color: var(--primary);">一斉にオープン！</button>
                     <button class="btn btn-sm" id="hide-all-btn" style="background-color: #94a3b8;">全部ふせる</button>
+                    <button class="btn btn-sm" id="fullscreen-btn" style="background-color: #64748b;">⛶ 全画面</button>
                 </div>
-                <p class="progress-text" style="font-size: 13px; margin-top: 12px;">カードをタップすると1人ずつオープンできます</p>
+                <p class="progress-text" style="font-size: 13px; margin-top: 12px;">カードをタップでオープン、オープン済みのカードをタップで大きく表示</p>
                 <div class="cards-grid" id="cards-grid"></div>
             </div>
 
@@ -549,6 +640,23 @@
             </div>
         </section>
     </template>
+
+    <!-- 1枚を大きく表示 -->
+    <div class="zoom-overlay" id="zoom" hidden>
+        <div class="zoom-card">
+            <div class="card-name" id="zoom-name"></div>
+            <div class="card-answer" id="zoom-answer"></div>
+        </div>
+        <div class="zoom-bar">
+            <button class="zoom-nav" id="zoom-prev" title="前へ">◀</button>
+            <span class="zoom-pos" id="zoom-pos"></span>
+            <button class="zoom-nav" id="zoom-next" title="次へ">▶</button>
+        </div>
+        <div class="zoom-bar">
+            <button class="btn btn-sm" id="zoom-hide" style="background-color: #94a3b8;">このカードをふせる</button>
+            <button class="btn btn-sm" id="zoom-close" style="background-color: var(--primary);">とじる ✕</button>
+        </div>
+    </div>
 
     <div class="sync-status" id="sync-status">オフライン</div>
 
