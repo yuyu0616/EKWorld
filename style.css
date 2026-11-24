@@ -1,39 +1,92 @@
-@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800;900&display=swap');
 
+/* =========================================================
+   デザインの基本設定 (色・角丸・影)
+   色を変えたいときは、ここの値を変えるだけで全ページに反映されます
+   ========================================================= */
 :root {
-    --bg-color: #fdf2f8;
-    /* very light pink */
-    --text-color: #4b4b4b;
-    --primary: #ff5e7e;
-    --primary-dark: #cc4b64;
-    --secondary: #3bcef3;
-    --accent: #ffd166;
+    --bg-color: #fff7fa;
+    --text-color: #403a4d;
+    --muted: #8b8499;
+    --primary: #ff6b8b;
+    --primary-dark: #e9557a;
+    --secondary: #4cc4f0;
+    --accent: #ffc94d;
+    --mint: #5ed6b0;
+    --lavender: #a993f5;
     --white: #ffffff;
+
+    --surface: #ffffff;
+    --surface-soft: #fbf7fd;
+    --line: rgba(64, 58, 77, 0.08);
+    --line-strong: #ebe3f0;
+
+    --radius-sm: 12px;
+    --radius-md: 18px;
+    --radius-lg: 24px;
+
+    --shadow-sm: 0 2px 8px rgba(64, 58, 77, 0.06);
+    --shadow-md: 0 10px 30px rgba(233, 85, 122, 0.10), 0 2px 8px rgba(64, 58, 77, 0.05);
+    --shadow-lg: 0 20px 50px rgba(233, 85, 122, 0.16), 0 4px 12px rgba(64, 58, 77, 0.06);
+    --ring: 0 0 0 4px rgba(255, 107, 139, 0.18);
+
+    --grad-primary: linear-gradient(135deg, #ff7a98 0%, #ff5c84 100%);
+    --grad-title: linear-gradient(120deg, #ff6b8b 0%, #ff9a6b 50%, #ffc94d 100%);
+}
+
+*,
+*::before,
+*::after {
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
     margin: 0;
     font-family: 'M PLUS Rounded 1c', sans-serif;
-    background-color: #f1f5f9;
-    /* スプラトゥーン風のスタイリッシュな斜めストライプ（うるさすぎないデザイン） */
-    background-image: repeating-linear-gradient(-45deg,
-            transparent,
-            transparent 20px,
-            rgba(0, 0, 0, 0.03) 20px,
-            rgba(0, 0, 0, 0.03) 40px);
+    font-weight: 700;
+    background-color: var(--bg-color);
+    /* やわらかいパステルの光 */
+    background-image:
+        radial-gradient(40rem 30rem at 0% 0%, rgba(255, 182, 200, 0.45), transparent 70%),
+        radial-gradient(36rem 28rem at 100% 10%, rgba(164, 222, 255, 0.40), transparent 70%),
+        radial-gradient(40rem 30rem at 50% 110%, rgba(255, 230, 160, 0.40), transparent 70%);
     color: var(--text-color);
     display: flex;
     justify-content: center;
     min-height: 100vh;
+    line-height: 1.6;
 }
 
 h1 {
-    font-size: 2.5rem;
-    color: var(--primary);
-    text-shadow: 2px 2px 0px var(--white), 4px 4px 0px rgba(0, 0, 0, 0.1);
-    margin-bottom: 30px;
+    font-size: 2.4rem;
+    font-weight: 900;
+    margin: 56px 0 28px;
     text-align: center;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
+    line-height: 1.3;
+    background: var(--grad-title);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    /* グラデーション非対応の環境では単色で表示 */
+    color: var(--primary);
+    -webkit-text-fill-color: transparent;
+    position: relative;
+}
+
+h1::after {
+    content: "";
+    display: block;
+    width: 48px;
+    height: 6px;
+    margin: 12px auto 0;
+    border-radius: 6px;
+    background: var(--grad-title);
+}
+
+h2, h3 {
+    color: var(--text-color);
+    font-weight: 800;
 }
 
 #app {
@@ -46,46 +99,60 @@ h1 {
     align-items: center;
 }
 
-/* 共通のポップなカードスタイル */
+/* 共通のカードスタイル */
 .pop-card {
-    background-color: var(--white);
-    border: 4px solid var(--text-color);
-    border-radius: 20px;
-    box-shadow: 6px 6px 0px var(--text-color);
-    transition: all 0.2s ease-in-out;
+    background-color: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 /* --- ボタン --- */
 .btn {
     font-family: 'M PLUS Rounded 1c', sans-serif;
     padding: 14px 28px;
-    border-radius: 50px;
+    border-radius: 999px;
     color: white;
     font-weight: 800;
     font-size: 18px;
-    border: 3px solid var(--text-color);
+    border: none;
     cursor: pointer;
-    box-shadow: 4px 4px 0px var(--text-color);
-    transition: all 0.2s ease;
+    background-color: var(--primary);
+    /* 上にうっすら光を重ねて立体感を出す (背景色はページ側で指定されることがある) */
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 60%);
+    box-shadow: 0 6px 16px rgba(64, 58, 77, 0.14), inset 0 -3px 0 rgba(0, 0, 0, 0.08);
+    transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
     letter-spacing: 1px;
 }
 
-.btn:active {
-    transform: translate(4px, 4px);
-    box-shadow: 0px 0px 0px var(--text-color);
+.btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    filter: brightness(1.04);
+    box-shadow: 0 10px 22px rgba(64, 58, 77, 0.18), inset 0 -3px 0 rgba(0, 0, 0, 0.08);
+}
+
+.btn:active:not(:disabled) {
+    transform: translateY(1px) scale(0.98);
+    box-shadow: 0 3px 8px rgba(64, 58, 77, 0.14), inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+}
+
+.btn:focus-visible {
+    outline: none;
+    box-shadow: var(--ring), 0 6px 16px rgba(64, 58, 77, 0.14);
 }
 
 .btn:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
     transform: none;
-    box-shadow: 4px 4px 0px var(--text-color);
+    filter: saturate(0.6);
 }
 
 .spin-btn {
     background-color: var(--primary);
     font-size: 24px;
-    padding: 16px 40px;
+    padding: 16px 48px;
     margin-top: 32px;
 }
 
@@ -94,26 +161,37 @@ h1 {
     margin-top: 16px;
 }
 
+/* 左上の「もどる」ボタン */
 .back-btn {
     position: absolute;
-    top: 20px;
-    left: 20px;
-    background-color: var(--white);
+    top: 16px;
+    left: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     color: var(--text-color);
     text-decoration: none;
-    padding: 10px 20px;
-    border-radius: 50px;
+    padding: 10px 18px;
+    border-radius: 999px;
     font-weight: 800;
     font-size: 14px;
-    border: 3px solid var(--text-color);
-    box-shadow: 3px 3px 0px var(--text-color);
-    transition: all 0.2s;
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.15s ease, box-shadow 0.2s ease, color 0.2s;
     z-index: 100;
 }
 
+.back-btn:hover {
+    color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
 .back-btn:active {
-    transform: translate(3px, 3px);
-    box-shadow: 0px 0px 0px var(--text-color);
+    transform: translateY(1px);
 }
 
 /* --- ルーレット --- */
@@ -121,7 +199,7 @@ h1 {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 60px;
+    margin-top: 72px;
     width: 100%;
 }
 
@@ -136,43 +214,43 @@ canvas {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    border: 6px solid var(--text-color);
-    box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.15);
+    border: 10px solid var(--white);
+    box-shadow: var(--shadow-lg), 0 0 0 1px var(--line);
     background-color: var(--white);
     box-sizing: border-box;
 }
 
 .pin {
     position: absolute;
-    top: -10px;
+    top: -12px;
     left: 50%;
     transform: translateX(-50%);
     width: 0;
     height: 0;
     border-left: 15px solid transparent;
     border-right: 15px solid transparent;
-    border-top: 35px solid var(--accent);
-    filter: drop-shadow(2px 4px 0px rgba(0, 0, 0, 0.2));
+    border-top: 35px solid var(--primary);
+    filter: drop-shadow(0 4px 6px rgba(233, 85, 122, 0.35));
     z-index: 10;
 }
 
 .result-text {
     margin-top: 30px;
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 800;
     color: var(--text-color);
-    background-color: var(--white);
-    padding: 16px 30px;
-    border-radius: 20px;
-    border: 4px solid var(--text-color);
-    box-shadow: 5px 5px 0px var(--accent);
+    background-color: var(--surface);
+    padding: 18px 32px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-md);
     text-align: center;
     animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 @keyframes popIn {
     0% {
-        transform: scale(0.8);
+        transform: scale(0.9);
         opacity: 0;
     }
 
@@ -193,58 +271,135 @@ canvas {
     display: none !important;
 }
 
-/* --- メニュー --- */
+/* --- トップページ --- */
+.site-hero {
+    text-align: center;
+    margin: 48px 0 32px;
+}
+
+.site-hero .site-logo {
+    font-size: clamp(44px, 10vw, 72px);
+    font-weight: 900;
+    margin: 0;
+    line-height: 1.1;
+    letter-spacing: 2px;
+}
+
+.site-hero .site-logo::after {
+    display: none;
+}
+
+.site-hero .site-tagline {
+    margin: 12px 0 0;
+    color: var(--muted);
+    font-weight: 700;
+    font-size: 16px;
+}
+
 .menu-container {
-    display: flex;
-    justify-content: center;
-    align-items: stretch;
-    flex-wrap: wrap;
-    gap: 24px;
-    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
     width: 100%;
 }
 
 .menu-card {
-    flex: 1 1 250px;
-    /* Responsive sizing */
+    --c: var(--primary);
     display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 140px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 24px;
+    min-height: 150px;
+    box-sizing: border-box;
     text-decoration: none;
     color: var(--text-color);
-    font-size: 28px;
-    font-weight: 800;
     cursor: pointer;
-    background-color: var(--white);
-    border: 4px solid var(--text-color);
-    border-radius: 20px;
-    box-shadow: 6px 6px 0px var(--text-color);
-    transition: transform 0.2s, box-shadow 0.2s;
+    background-color: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     position: relative;
     overflow: hidden;
 }
 
+/* カードの右上にテーマ色の光 */
 .menu-card::before {
     content: "";
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 100%);
+    top: -40px;
+    right: -40px;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: var(--c);
+    opacity: 0.10;
+    transition: transform 0.3s ease, opacity 0.3s ease;
     pointer-events: none;
 }
 
 .menu-card:hover {
-    transform: translate(-4px, -4px);
-    box-shadow: 10px 10px 0px var(--primary);
-    color: var(--primary);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.menu-card:hover::before {
+    transform: scale(1.3);
+    opacity: 0.16;
 }
 
 .menu-card:active {
-    transform: translate(2px, 2px);
-    box-shadow: 4px 4px 0px var(--primary);
+    transform: translateY(-1px) scale(0.99);
+}
+
+.menu-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin-bottom: 10px;
+    background: color-mix(in srgb, var(--c) 16%, white);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 20%, transparent);
+}
+
+.menu-title {
+    font-size: 21px;
+    font-weight: 900;
+    line-height: 1.3;
+}
+
+.menu-desc {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--muted);
+    line-height: 1.5;
+}
+
+.menu-card .menu-arrow {
+    position: absolute;
+    right: 20px;
+    bottom: 18px;
+    font-size: 18px;
+    color: var(--c);
+    opacity: 0;
+    transform: translateX(-6px);
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.menu-card:hover .menu-arrow {
+    opacity: 1;
+    transform: none;
+}
+
+.site-footer {
+    margin: 40px 0 16px;
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
 }
 
 /* --- ミッション --- */
@@ -253,45 +408,49 @@ canvas {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 16px;
+    gap: 14px;
     width: 100%;
     margin-top: 10px;
+    padding-bottom: 90px;
 }
 
 .mission-item {
-    flex: 1 1 calc(50% - 16px);
+    flex: 1 1 calc(50% - 14px);
     box-sizing: border-box;
     min-width: 280px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: var(--white);
-    padding: 18px 24px;
-    border: 3px solid var(--text-color);
-    border-radius: 16px;
-    box-shadow: 4px 4px 0px var(--text-color);
+    background-color: var(--surface);
+    padding: 18px 22px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s;
     font-size: 20px;
     font-weight: 800;
     color: var(--text-color);
     user-select: none;
-    -webkit-tap-highlight-color: transparent;
+}
+
+.mission-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
 .mission-item:active {
-    transform: translate(2px, 2px);
-    box-shadow: 2px 2px 0px var(--text-color);
+    transform: scale(0.98);
 }
 
 .mission-item.checked {
-    background-color: #2d3748;
-    /* 黒背景でネオンカラーを際立たせる */
+    background-color: #3b3448;
     color: var(--white);
     text-decoration: line-through;
     text-decoration-thickness: 3px;
-    box-shadow: 4px 4px 0px var(--primary);
-    border-color: var(--primary);
+    text-decoration-color: var(--primary);
+    box-shadow: 0 8px 22px rgba(59, 52, 72, 0.25);
+    border-color: transparent;
 }
 
 .icon-wrapper {
@@ -305,8 +464,7 @@ canvas {
 .squid-icon {
     width: 100%;
     height: 100%;
-    color: #cbd5e1;
-    /* チェック前はグレー */
+    color: #ddd5e5;
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     transform: scale(0.9);
 }
@@ -315,10 +473,9 @@ canvas {
     color: var(--primary);
     /* jsでランダム上書きされる */
     transform: scale(1.3) rotate(15deg);
-    filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5));
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
 }
 
-/* ミッションテキストとポイントのレイアウト */
 .mission-text-wrapper {
     display: flex;
     flex-direction: column;
@@ -326,16 +483,16 @@ canvas {
 }
 
 .mission-title {
-    font-size: 20px;
+    font-size: 19px;
 }
 
 .mission-points {
-    font-size: 14px;
-    color: #64748b;
+    font-size: 13px;
+    color: var(--muted);
 }
 
 .mission-item.checked .mission-points {
-    color: #94a3b8;
+    color: #b3abc1;
 }
 
 /* 固定ポイント表示 */
@@ -343,11 +500,13 @@ canvas {
     position: fixed;
     bottom: 24px;
     right: 24px;
-    background-color: var(--white);
-    border: 4px solid var(--text-color);
-    border-radius: 50px;
+    background-color: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--line);
+    border-radius: 999px;
     padding: 12px 28px;
-    box-shadow: 6px 6px 0px var(--accent);
+    box-shadow: var(--shadow-lg);
     display: flex;
     align-items: baseline;
     gap: 8px;
@@ -356,9 +515,9 @@ canvas {
 }
 
 .points-label {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 800;
-    color: var(--text-color);
+    color: var(--muted);
 }
 
 .points-value {
@@ -369,12 +528,11 @@ canvas {
 }
 
 .points-unit {
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 800;
-    color: var(--text-color);
+    color: var(--muted);
 }
 
-/* ポイント増加アニメーション */
 .pop-anim {
     animation: bounce 0.3s ease;
 }
@@ -398,41 +556,54 @@ canvas {
     width: 100%;
     display: flex;
     justify-content: center;
-    margin-top: 40px;
+    margin-top: 16px;
 }
 
 .quote-card {
-    padding: 40px 30px;
+    padding: 48px 36px 36px;
     width: 100%;
     max-width: 600px;
     text-align: center;
     display: flex;
     flex-direction: column;
     gap: 20px;
+    position: relative;
     animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.quote-text {
-    font-size: 28px;
-    font-weight: 800;
+.quote-card::before {
+    content: "“";
+    position: absolute;
+    top: -8px;
+    left: 24px;
+    font-size: 96px;
+    line-height: 1;
+    font-weight: 900;
     color: var(--primary);
-    line-height: 1.6;
+    opacity: 0.18;
+}
+
+.quote-text {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text-color);
+    line-height: 1.7;
     margin: 0;
 }
 
 .quote-author {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--text-color);
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--primary);
     margin: 0;
     text-align: right;
 }
 
 .quote-work {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
-    color: #64748b;
-    margin: -10px 0 0 0;
+    color: var(--muted);
+    margin: -12px 0 0 0;
     text-align: right;
 }
 
@@ -441,14 +612,14 @@ canvas {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
     padding: 60px 0;
     width: 100%;
 }
 
 .content-loader .dot {
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
     animation: contentBounce 0.5s infinite alternate cubic-bezier(0.5, 0.05, 0.1, 0.3);
 }
@@ -477,7 +648,7 @@ canvas {
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background-color: rgba(255, 255, 255, 0.8);
+    background-color: rgba(64, 58, 77, 0.35);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     z-index: 1000;
@@ -496,10 +667,10 @@ canvas {
 }
 
 .modal-content {
-    background-color: var(--white);
+    background-color: var(--surface);
     padding: 40px;
-    border-radius: 30px;
-    box-shadow: 0 8px 0 var(--gray-shadow), 0 20px 40px rgba(0,0,0,0.1);
+    border-radius: 28px;
+    box-shadow: var(--shadow-lg);
     width: 90%;
     max-width: 400px;
     text-align: center;
@@ -508,55 +679,49 @@ canvas {
 }
 
 .modal-overlay.hidden .modal-content {
-    transform: scale(0.8) translateY(20px);
+    transform: scale(0.9) translateY(20px);
 }
 
 .modal-input {
     width: 100%;
-    padding: 16px 20px;
-    border: none;
-    border-radius: 16px;
+    padding: 14px 18px;
+    border: 2px solid var(--line-strong);
+    border-radius: var(--radius-sm);
     font-family: 'M PLUS Rounded 1c', sans-serif;
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
     box-sizing: border-box;
-    background-color: #f1f5f9;
+    background-color: var(--surface-soft);
     color: var(--text-color);
     transition: all 0.2s;
     text-align: center;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .modal-input:focus {
     outline: none;
     background-color: var(--white);
-    box-shadow: 0 0 0 4px rgba(255, 94, 126, 0.2);
+    border-color: var(--primary);
+    box-shadow: var(--ring);
 }
 
 .modal-actions {
     display: flex;
     justify-content: center;
-    gap: 16px;
+    gap: 12px;
     margin-top: 24px;
 }
 
 .btn-close {
-    background-color: #94a3b8;
-    box-shadow: 0 6px 0 #64748b;
+    background-color: #b3abc1;
     padding: 12px 24px;
-    font-size: 18px;
+    font-size: 17px;
 }
-.btn-close:hover { box-shadow: 0 8px 0 #64748b; }
-.btn-close:active { top: 6px; box-shadow: 0 0 0 #64748b; }
 
 .btn-unlock {
     background-color: var(--primary);
-    box-shadow: 0 6px 0 var(--primary-dark);
     padding: 12px 24px;
-    font-size: 18px;
+    font-size: 17px;
 }
-.btn-unlock:hover { box-shadow: 0 8px 0 var(--primary-dark); }
-.btn-unlock:active { top: 6px; box-shadow: 0 0 0 var(--primary-dark); }
 
 .shake-error {
     animation: shakeModal 0.4s cubic-bezier(.36,.07,.19,.97) both;
@@ -571,30 +736,54 @@ canvas {
 
 @keyframes contentBounce {
     0% { transform: translateY(0) scale(1); }
-    100% { transform: translateY(-24px) scale(1.1); }
+    100% { transform: translateY(-20px) scale(1.1); }
 }
 
 /* スマホ向けレスポンシブ調整 */
 @media (max-width: 600px) {
     h1 {
-        font-size: 2rem;
-        margin-top: 40px;
+        font-size: 1.9rem;
+        margin-top: 64px;
     }
 
     .back-btn {
         top: 10px;
         left: 10px;
-        font-size: 12px;
-        padding: 8px 16px;
+        font-size: 13px;
+        padding: 8px 14px;
     }
 
     .roulette-container {
-        margin-top: 40px;
+        margin-top: 64px;
+    }
+
+    .site-hero {
+        margin-top: 32px;
+    }
+
+    .menu-container {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
     }
 
     .menu-card {
-        min-height: 100px;
-        font-size: 22px;
+        padding: 16px;
+        min-height: 130px;
+    }
+
+    .menu-icon {
+        width: 44px;
+        height: 44px;
+        font-size: 24px;
+        margin-bottom: 6px;
+    }
+
+    .menu-title {
+        font-size: 17px;
+    }
+
+    .menu-desc {
+        font-size: 12px;
     }
 
     .mission-item {
@@ -617,7 +806,7 @@ canvas {
     }
 
     .quote-card {
-        padding: 30px 20px;
+        padding: 40px 22px 28px;
     }
 
     .quote-text {
@@ -682,8 +871,7 @@ canvas {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: var(--primary);
-    /* スプラトゥーンらしいポップなピンク */
+    background: linear-gradient(135deg, #ff8fab 0%, #ff6b8b 50%, #ff9a6b 100%);
     z-index: 9999;
     display: flex;
     justify-content: center;
@@ -708,18 +896,15 @@ canvas {
     font-weight: 900;
     color: var(--white);
     letter-spacing: 4px;
-    -webkit-text-stroke: 4px var(--text-color);
-    text-shadow: 8px 8px 0px var(--text-color);
+    text-shadow: 0 8px 24px rgba(160, 30, 70, 0.30);
     display: flex;
     gap: 2px;
-    transform: rotate(-5deg);
 }
 
 .loader-text span {
     display: inline-block;
     animation: popBounceLetter 1.2s infinite cubic-bezier(0.175, 0.885, 0.32, 1.275);
     animation-delay: calc(0.1s * var(--i));
-    /* Give letters a random-looking initial slight rotation */
 }
 
 .loader-text span:nth-child(even) {
@@ -735,8 +920,8 @@ canvas {
     }
 
     50% {
-        transform: translateY(-25px) rotate(12deg) scale(1.15);
-        color: var(--accent);
+        transform: translateY(-22px) rotate(8deg) scale(1.12);
+        color: #fff1b8;
     }
 }
 
@@ -751,7 +936,7 @@ canvas {
 }
 
 .edit-toggle-label {
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 800;
     color: var(--text-color);
     transition: color 0.3s;
@@ -774,8 +959,8 @@ canvas {
     position: absolute;
     cursor: pointer;
     top: 0; left: 0; right: 0; bottom: 0;
-    background-color: #cbd5e1;
-    transition: .4s;
+    background-color: #ddd5e5;
+    transition: .3s;
 }
 
 .slider:before {
@@ -786,8 +971,8 @@ canvas {
     left: 4px;
     bottom: 4px;
     background-color: white;
-    transition: .4s;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    transition: .3s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
 input:checked + .slider {
@@ -832,8 +1017,9 @@ input:checked + .slider:before {
     right: 0;
     top: 50%;
     width: 30px;
-    height: 4px;
-    background-color: var(--text-color);
+    height: 3px;
+    border-radius: 3px;
+    background-color: #e3d9ea;
     transform: translateY(-50%);
 }
 
@@ -852,8 +1038,8 @@ input:checked + .slider:before {
     right: 30px;
     top: 50%;
     width: 15px;
-    height: 4px;
-    background-color: var(--text-color);
+    height: 3px;
+    background-color: #e3d9ea;
     transform: translateY(-50%);
 }
 
@@ -864,8 +1050,8 @@ input:checked + .slider:before {
     right: 30px;
     top: 50%;
     bottom: 0;
-    width: 4px;
-    background-color: var(--text-color);
+    width: 3px;
+    background-color: #e3d9ea;
 }
 .match-team.bottom::after {
     content: "";
@@ -873,8 +1059,8 @@ input:checked + .slider:before {
     right: 30px;
     top: 0;
     bottom: 50%;
-    width: 4px;
-    background-color: var(--text-color);
+    width: 3px;
+    background-color: #e3d9ea;
 }
 
 /* 決勝ラウンド（最後の勝者）の特別なスタイル */
@@ -890,14 +1076,14 @@ input:checked + .slider:before {
 
 .player-box {
     width: 140px;
-    background-color: var(--white);
-    border: 4px solid var(--text-color);
-    border-radius: 12px;
+    background-color: var(--surface);
+    border: 2px solid var(--line-strong);
+    border-radius: var(--radius-sm);
     padding: 10px 14px;
     font-weight: 800;
     font-size: 16px;
     text-align: center;
-    box-shadow: 4px 4px 0px var(--text-color);
+    box-shadow: var(--shadow-sm);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -910,38 +1096,45 @@ input:checked + .slider:before {
 
 .player-box:hover {
     transform: translateY(-2px);
-    box-shadow: 6px 6px 0px var(--primary);
+    box-shadow: var(--shadow-md);
     border-color: var(--primary);
+    color: var(--primary);
 }
 
 .player-box.bye {
-    background-color: #f1f5f9;
-    color: #94a3b8;
-    border-color: #cbd5e1;
-    box-shadow: 4px 4px 0px #cbd5e1;
+    background-color: var(--surface-soft);
+    color: #b3abc1;
+    border-color: var(--line-strong);
+    border-style: dashed;
+    box-shadow: none;
     cursor: default;
 }
 
 .player-box.bye:hover {
     transform: none;
-    box-shadow: 4px 4px 0px #cbd5e1;
-    border-color: #cbd5e1;
+    box-shadow: none;
+    border-color: var(--line-strong);
+    color: #b3abc1;
 }
 
 .player-box.final-winner {
-    background-color: #fffbeb;
+    background: linear-gradient(135deg, #fff8e1, #ffefc2);
     border-color: var(--accent);
-    box-shadow: 6px 6px 0px var(--accent);
+    box-shadow: 0 8px 24px rgba(255, 201, 77, 0.45);
     transform: scale(1.1);
     cursor: default;
 }
 
 .player-box.final-winner:hover {
     transform: scale(1.15);
+    color: var(--text-color);
 }
 
+/* トーナメント表の .round と名前が同じなので、幅などを打ち消す */
 .slider.round {
     border-radius: 34px;
+    width: auto;
+    display: block;
 }
 
 .slider.round:before {
@@ -950,13 +1143,35 @@ input:checked + .slider:before {
 
 .display-text {
     padding: 16px 20px;
-    background-color: #f8fafc;
-    border: 2px dashed #cbd5e1;
-    border-radius: 16px;
-    font-size: 18px;
+    background-color: var(--surface-soft);
+    border: 2px dashed var(--line-strong);
+    border-radius: var(--radius-md);
+    font-size: 17px;
     font-weight: 700;
     color: var(--text-color);
     white-space: pre-wrap;
     min-height: 50px;
     word-break: break-word;
+}
+
+/* 入力欄 (各ページ共通) */
+input[type="text"],
+input[type="password"],
+input[type="number"],
+select,
+textarea {
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+}
+
+::selection {
+    background: rgba(255, 107, 139, 0.25);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
 }
