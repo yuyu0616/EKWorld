@@ -142,6 +142,11 @@ const flipApp = {
             else this.toggleCard(card.dataset.name);
         });
         on('fullscreen-btn', 'click', () => this.toggleFullscreen());
+        on('save-board-btn', 'click', e => this.saveBoardImage(e.currentTarget));
+        ['member-list', 'answer-members'].forEach(id => on(id, 'click', e => {
+            const btn = e.target.closest('.remove-btn');
+            if (btn) this.removeMember(btn.dataset.name);
+        }));
         this.renderFullscreenButton();
         // 画面幅が変わったらカードの大きさを計算し直す
         if (window.ResizeObserver) {
@@ -272,15 +277,16 @@ const flipApp = {
 
         // お題画面: メンバー一覧
         document.getElementById('member-count').textContent = players.length;
-        this.renderMembers('member-list', players, () => true);
+        this.renderMembers('member-list', players, () => true, () => '', true);
         // 回答画面: 回答状況
         document.getElementById('answer-progress').textContent = `回答済み ${answered.length} / ${players.length} 人`;
-        this.renderMembers('answer-members', players, p => this.hasAnswer(p), p => (this.hasAnswer(p) ? '✔ ' : '… '));
+        this.renderMembers('answer-members', players, p => this.hasAnswer(p), p => (this.hasAnswer(p) ? '✔ ' : '… '), true);
 
         document.getElementById('progress-text').textContent =
             `回答済み ${answered.length} / ${players.length} 人　・　オープン ${opened.length} 枚`;
 
         document.getElementById('reveal-all-btn').disabled = answered.length === 0 || opened.length === answered.length;
+        document.getElementById('save-board-btn').disabled = opened.length === 0;
         document.getElementById('hide-all-btn').disabled = opened.length === 0;
 
         this.renderMyStatus();
@@ -317,15 +323,30 @@ const flipApp = {
         }
     },
 
-    renderMembers(id, players, isOk, prefix = () => '') {
+    renderMembers(id, players, isOk, prefix = () => '', removable = false) {
         const ul = document.getElementById(id);
         ul.textContent = '';
         players.forEach(p => {
+            const isMe = p.name === this.playerName;
             const li = document.createElement('li');
             li.className = 'member-chip';
             li.classList.toggle('ok', isOk(p));
-            li.classList.toggle('me', p.name === this.playerName);
-            li.textContent = prefix(p) + p.name + (p.name === this.playerName ? '（あなた）' : '');
+            li.classList.toggle('me', isMe);
+            const label = document.createElement('span');
+            label.textContent = prefix(p) + p.name + (isMe ? '（あなた）' : '');
+            li.appendChild(label);
+            // 自分は「退出」で抜けるので、削除ボタンは他の人にだけ付ける
+            if (removable && !isMe) {
+                li.classList.add('removable');
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'remove-btn';
+                btn.dataset.name = p.name;
+                btn.title = `${p.name} さんを削除`;
+                btn.setAttribute('aria-label', `${p.name} さんを削除`);
+                btn.textContent = '✕';
+                li.appendChild(btn);
+            }
             ul.appendChild(li);
         });
     },
@@ -483,6 +504,34 @@ const flipApp = {
         el.style.fontSize = lo + 'px';
     },
 
+    // ---------- 画像で保存 ----------
+
+    imageInfo() {
+        return { question: this.currentQuestion(), round: this.state.round };
+    },
+
+    saveBoardImage(btn) {
+        const players = this.openedPlayers();
+        if (!players.length) return;
+        this.saveImage(btn, () => FlipImage.saveBoard(players, this.imageInfo()));
+    },
+
+    async saveImage(btn, task) {
+        const label = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = '保存中...';
+        try {
+            await task();
+        } catch (e) {
+            console.error(e);
+            alert('画像の保存に失敗しました。');
+        } finally {
+            btn.textContent = label;
+            btn.disabled = false;
+            if (this.phase === 'room') this.renderRoom();
+        }
+    },
+
     // ---------- 全画面 ----------
 
     renderFullscreenButton() {
@@ -512,6 +561,11 @@ const flipApp = {
         on('zoom-close', () => this.closeZoom());
         on('zoom-prev', () => this.moveZoom(-1));
         on('zoom-next', () => this.moveZoom(1));
+        on('zoom-save', e => {
+            const p = this.state.players[this.zoomName];
+            const index = this.openedPlayers().findIndex(x => x.name === this.zoomName) + 1;
+            if (p) this.saveImage(e.currentTarget, () => FlipImage.saveCard({ name: this.zoomName, ...p }, { ...this.imageInfo(), index }));
+        });
         on('zoom-hide', () => {
             const name = this.zoomName;
             this.closeZoom();
@@ -654,6 +708,32 @@ const flipApp = {
         this.render();
         await this.sync();
         this.startSync();
+    },
+
+    removeMember(name) {
+        const p = this.state.players[name];
+        if (!p || p.left || name === this.playerName) return;
+        if (!confirm(`${name} さんをルームから削除しますか？\n（回答も消えます。もう一度入室すれば戻れます）`)) return;
+        this.state.players[name] = { ...p, left: true, removed: true, at: this.now() };
+        delete this.state.reveal[name];
+        this.render();
+        this.sync();
+    },
+
+    // 他の人に削除されたら、入室画面に戻す
+    checkRemoved() {
+        const me = this.me();
+        if (this.phase !== 'room' || !me || !me.left) return false;
+        this.stopSync();
+        this.closeZoom();
+        if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+        this.roomId = '';
+        this.phase = 'lobby';
+        this.state = emptyState();
+        this.render();
+        this.setSyncStatus('オフライン');
+        alert('ルームから削除されました。\nもう一度入室すると参加できます。');
+        return true;
     },
 
     async leaveRoom() {
@@ -804,6 +884,7 @@ const flipApp = {
                 merged = mergeState(this.state, merged);
                 const changedLocal = canon(merged) !== canon(normalize(this.state));
                 this.state = merged;
+                if (this.checkRemoved()) break;
                 if (changedLocal && this.phase === 'room') this.render();
             } while (this.syncAgain);
         } finally {

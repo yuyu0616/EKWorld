@@ -78,6 +78,35 @@ const FlipDraw = (() => {
     }
 
     /**
+     * canvas に線を描く (ctx は 横400×縦300 の座標系に合わせておく)
+     * 手書き欄と、画像保存の両方で使う
+     */
+    function paint(ctx, drawing) {
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        drawing.forEach(s => {
+            ctx.strokeStyle = s.c;
+            ctx.lineWidth = s.w;
+            if (s.p.length === 2) {
+                ctx.fillStyle = s.c;
+                ctx.beginPath();
+                ctx.arc(s.p[0], s.p[1], s.w / 2, 0, Math.PI * 2);
+                ctx.fill();
+                return;
+            }
+            ctx.beginPath();
+            trace(s.p, {
+                move: (x, y) => ctx.moveTo(x, y),
+                line: (x, y) => ctx.lineTo(x, y),
+                quad: (cx, cy, x, y) => ctx.quadraticCurveTo(cx, cy, x, y)
+            });
+            ctx.stroke();
+        });
+        ctx.restore();
+    }
+
+    /**
      * 手書き用のキャンバス
      * onChange(strokes) は線が確定するたびに呼ばれる
      */
@@ -194,29 +223,10 @@ const FlipDraw = (() => {
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.setTransform(scale, 0, 0, scale, 0, 0);
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
             const all = this.current ? [...this.strokes, this.current] : this.strokes;
-            all.forEach(s => {
-                ctx.strokeStyle = s.c;
-                ctx.lineWidth = s.w;
-                if (s.p.length === 2) {
-                    ctx.fillStyle = s.c;
-                    ctx.beginPath();
-                    ctx.arc(s.p[0], s.p[1], s.w / 2, 0, Math.PI * 2);
-                    ctx.fill();
-                    return;
-                }
-                ctx.beginPath();
-                trace(s.p, {
-                    move: (x, y) => ctx.moveTo(x, y),
-                    line: (x, y) => ctx.lineTo(x, y),
-                    quad: (cx, cy, x, y) => ctx.quadraticCurveTo(cx, cy, x, y)
-                });
-                ctx.stroke();
-            });
+            paint(ctx, all);
         }
     }
 
-    return { W, H, COLORS, WIDTHS, MAX_POINTS, sanitize, toSVG, Pad };
+    return { W, H, COLORS, WIDTHS, MAX_POINTS, sanitize, toSVG, paint, Pad };
 })();
