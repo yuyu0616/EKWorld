@@ -509,6 +509,7 @@
         .member-chip.ok { background: var(--accent); color: var(--text-color); }
         .member-chip.me { border-color: var(--secondary); }
         .member-chip.removable { padding-right: 6px; }
+        .member-chip.offline { opacity: 0.6; border-style: dashed; }
         .remove-btn {
             width: 22px;
             height: 22px;
@@ -593,7 +594,8 @@
             <div class="flip-panel">
                 <h3>参加しているメンバー（<span id="member-count"></span>人）</h3>
                 <ul class="member-list" id="member-list"></ul>
-                <p class="member-note">✕ でメンバーをルームから削除できます（削除された人は、もう一度入室すれば戻れます）</p>
+                <p class="member-note" id="member-note"></p>
+                <button class="btn btn-sm" id="remove-offline-btn" style="background-color: #94a3b8; margin-top: 12px;" hidden></button>
             </div>
         </section>
 
