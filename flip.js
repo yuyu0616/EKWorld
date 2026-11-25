@@ -7,6 +7,8 @@
 const { emptyState, normalize, canon, mergeState } = window.FlipMerge;
 const API_URL = '/api/flip';
 const SYNC_INTERVAL_MS = 4000;
+const HEARTBEAT_MS = 60 * 1000;      // この間隔で「まだ画面を開いている」ことを記録する
+const OFFLINE_AFTER_MS = 150 * 1000; // これより長く記録がない人はオフライン扱い
 
 // ---------- アプリ本体 ----------
 
@@ -50,6 +52,32 @@ const flipApp = {
             .map(name => ({ name, ...this.state.players[name] }))
             .filter(p => !p.left)
             .sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0) || a.name.localeCompare(b.name));
+    },
+
+    // 最後に画面を開いていた時刻が新しければオンライン
+    isOnline(name) {
+        if (name === this.playerName) return true;
+        const seen = Number(this.state.seen[name]) || 0;
+        return this.now() - seen < OFFLINE_AFTER_MS;
+    },
+
+    /**
+     * 部屋主 (メンバーを削除できる人)
+     * ルームを作った人。その人が退出・削除・オフラインになったら、
+     * オンラインの中でいちばん早く入った人に自動で引き継ぐ
+     */
+    ownerName() {
+        const players = this.activePlayers();
+        if (!players.length) return null;
+        const stored = this.state.owner && this.state.owner.name;
+        const online = players.filter(p => this.isOnline(p.name));
+        if (stored && online.some(p => p.name === stored)) return stored;
+        if (online.length) return online[0].name;
+        return players.some(p => p.name === stored) ? stored : players[0].name;
+    },
+
+    isOwner() {
+        return this.ownerName() === this.playerName;
     },
 
     hasAnswer(p) {
@@ -142,6 +170,12 @@ const flipApp = {
             else this.toggleCard(card.dataset.name);
         });
         on('fullscreen-btn', 'click', () => this.toggleFullscreen());
+        on('save-board-btn', 'click', e => this.saveBoardImage(e.currentTarget));
+        on('remove-offline-btn', 'click', () => this.removeOfflineMembers());
+        ['member-list', 'answer-members'].forEach(id => on(id, 'click', e => {
+            const btn = e.target.closest('.remove-btn');
+            if (btn) this.removeMember(btn.dataset.name);
+        }));
         this.renderFullscreenButton();
         // 画面幅が変わったらカードの大きさを計算し直す
         if (window.ResizeObserver) {
@@ -272,15 +306,18 @@ const flipApp = {
 
         // お題画面: メンバー一覧
         document.getElementById('member-count').textContent = players.length;
-        this.renderMembers('member-list', players, () => true);
+        const owner = this.isOwner();
+        this.renderMembers('member-list', players, p => this.isOnline(p.name), () => '', owner);
+        this.renderMemberNote(players, owner);
         // 回答画面: 回答状況
         document.getElementById('answer-progress').textContent = `回答済み ${answered.length} / ${players.length} 人`;
-        this.renderMembers('answer-members', players, p => this.hasAnswer(p), p => (this.hasAnswer(p) ? '✔ ' : '… '));
+        this.renderMembers('answer-members', players, p => this.hasAnswer(p), p => (this.hasAnswer(p) ? '✔ ' : '… '), owner);
 
         document.getElementById('progress-text').textContent =
             `回答済み ${answered.length} / ${players.length} 人　・　オープン ${opened.length} 枚`;
 
         document.getElementById('reveal-all-btn').disabled = answered.length === 0 || opened.length === answered.length;
+        document.getElementById('save-board-btn').disabled = opened.length === 0;
         document.getElementById('hide-all-btn').disabled = opened.length === 0;
 
         this.renderMyStatus();
@@ -317,17 +354,48 @@ const flipApp = {
         }
     },
 
-    renderMembers(id, players, isOk, prefix = () => '') {
+    renderMembers(id, players, isOk, prefix = () => '', removable = false) {
         const ul = document.getElementById(id);
         ul.textContent = '';
+        const owner = this.ownerName();
         players.forEach(p => {
+            const isMe = p.name === this.playerName;
+            const online = this.isOnline(p.name);
             const li = document.createElement('li');
             li.className = 'member-chip';
             li.classList.toggle('ok', isOk(p));
-            li.classList.toggle('me', p.name === this.playerName);
-            li.textContent = prefix(p) + p.name + (p.name === this.playerName ? '（あなた）' : '');
+            li.classList.toggle('me', isMe);
+            li.classList.toggle('offline', !online);
+            const label = document.createElement('span');
+            label.textContent = (p.name === owner ? '👑 ' : '') + prefix(p) + p.name
+                + (isMe ? '（あなた）' : '') + (online ? '' : '（オフライン）');
+            li.title = p.name === owner ? '部屋主' : (online ? '' : 'しばらく画面を開いていません');
+            li.appendChild(label);
+            // 自分は「退出」で抜けるので、削除ボタンは他の人にだけ付ける
+            if (removable && !isMe) {
+                li.classList.add('removable');
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'remove-btn';
+                btn.dataset.name = p.name;
+                btn.title = `${p.name} さんを削除`;
+                btn.setAttribute('aria-label', `${p.name} さんを削除`);
+                btn.textContent = '✕';
+                li.appendChild(btn);
+            }
             ul.appendChild(li);
         });
+    },
+
+    renderMemberNote(players, owner) {
+        const note = document.getElementById('member-note');
+        const btn = document.getElementById('remove-offline-btn');
+        const offline = players.filter(p => !this.isOnline(p.name) && p.name !== this.playerName);
+        note.textContent = owner
+            ? 'あなたは部屋主（👑）です。✕ でメンバーをルームから削除できます（削除された人は、もう一度入室すれば戻れます）'
+            : '👑 は部屋主です。メンバーの削除は部屋主だけができます';
+        btn.hidden = !owner || offline.length === 0;
+        btn.textContent = `オフラインの人をまとめて削除（${offline.length}人）`;
     },
 
     renderMyStatus() {
@@ -483,6 +551,34 @@ const flipApp = {
         el.style.fontSize = lo + 'px';
     },
 
+    // ---------- 画像で保存 ----------
+
+    imageInfo() {
+        return { question: this.currentQuestion(), round: this.state.round };
+    },
+
+    saveBoardImage(btn) {
+        const players = this.openedPlayers();
+        if (!players.length) return;
+        this.saveImage(btn, () => FlipImage.saveBoard(players, this.imageInfo()));
+    },
+
+    async saveImage(btn, task) {
+        const label = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = '保存中...';
+        try {
+            await task();
+        } catch (e) {
+            console.error(e);
+            alert('画像の保存に失敗しました。');
+        } finally {
+            btn.textContent = label;
+            btn.disabled = false;
+            if (this.phase === 'room') this.renderRoom();
+        }
+    },
+
     // ---------- 全画面 ----------
 
     renderFullscreenButton() {
@@ -512,6 +608,11 @@ const flipApp = {
         on('zoom-close', () => this.closeZoom());
         on('zoom-prev', () => this.moveZoom(-1));
         on('zoom-next', () => this.moveZoom(1));
+        on('zoom-save', e => {
+            const p = this.state.players[this.zoomName];
+            const index = this.openedPlayers().findIndex(x => x.name === this.zoomName) + 1;
+            if (p) this.saveImage(e.currentTarget, () => FlipImage.saveCard({ name: this.zoomName, ...p }, { ...this.imageInfo(), index }));
+        });
         on('zoom-hide', () => {
             const name = this.zoomName;
             this.closeZoom();
@@ -644,11 +745,16 @@ const flipApp = {
         if (prev && !prev.left) {
             // 同じ名前で再入室 (リロードなど) → そのまま引き継ぐ
         } else {
+            // 削除・退出後に入り直した場合は、新しく入った人として扱う
             this.state.players[name] = {
-                answer: '', submitted: false, round: this.state.round,
-                joinedAt: prev && prev.joinedAt ? prev.joinedAt : t, at: t
+                answer: '', submitted: false, round: this.state.round, joinedAt: t, at: t
             };
         }
+        // ルームを新しく作った人が部屋主
+        if (!server || !this.state.owner) {
+            this.state.owner = { name, at: t };
+        }
+        this.state.seen[name] = t;
 
         this.phase = 'room';
         this.render();
@@ -656,12 +762,71 @@ const flipApp = {
         this.startSync();
     },
 
+    removeMember(name) {
+        const p = this.state.players[name];
+        if (!p || p.left || name === this.playerName) return;
+        if (!this.isOwner()) {
+            alert('メンバーの削除は部屋主（👑）だけができます。');
+            return;
+        }
+        if (!confirm(`${name} さんをルームから削除しますか？\n（回答も消えます。もう一度入室すれば戻れます）`)) return;
+        this.markRemoved([name]);
+    },
+
+    removeOfflineMembers() {
+        if (!this.isOwner()) return;
+        const names = this.activePlayers()
+            .filter(p => p.name !== this.playerName && !this.isOnline(p.name))
+            .map(p => p.name);
+        if (!names.length) return;
+        if (!confirm(`オフラインの ${names.length} 人（${names.join('、')}）をルームから削除しますか？`)) return;
+        this.markRemoved(names);
+    },
+
+    markRemoved(names) {
+        const t = this.now();
+        names.forEach(name => {
+            const p = this.state.players[name];
+            if (!p) return;
+            this.state.players[name] = { ...p, left: true, removed: true, at: t };
+            delete this.state.reveal[name];
+            // 削除した人が部屋主として記録されていたら、自分が引き継ぐ
+            if (this.state.owner && this.state.owner.name === name) {
+                this.state.owner = { name: this.playerName, at: t };
+            }
+        });
+        this.render();
+        this.sync();
+    },
+
+    // 他の人に削除されたら、入室画面に戻す
+    checkRemoved() {
+        const me = this.me();
+        if (this.phase !== 'room' || !me || !me.left) return false;
+        this.stopSync();
+        this.closeZoom();
+        if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+        this.roomId = '';
+        this.phase = 'lobby';
+        this.state = emptyState();
+        this.render();
+        this.setSyncStatus('オフライン');
+        alert('ルームから削除されました。\nもう一度入室すると参加できます。');
+        return true;
+    },
+
     async leaveRoom() {
         if (!confirm('ルームから退出しますか？')) return;
         this.stopSync();
         const me = this.me();
         if (me) {
-            this.state.players[this.playerName] = { ...me, left: true, at: this.now() };
+            const t = this.now();
+            this.state.players[this.playerName] = { ...me, left: true, at: t };
+            // 部屋主が抜けるときは、次の人に部屋主を渡す
+            if (this.state.owner && this.state.owner.name === this.playerName) {
+                const next = this.activePlayers().find(p => this.isOnline(p.name)) || this.activePlayers()[0];
+                this.state.owner = next ? { name: next.name, at: t } : null;
+            }
             await this.pushState(this.state);
         }
         this.roomId = '';
@@ -767,9 +932,14 @@ const flipApp = {
     startSync() {
         this.stopSync();
         // タブが裏にある間は通信しない (関数の呼び出し回数を節約)
+        // ただし「まだ画面を開いている」記録だけは、裏にあっても約1分ごとに送る
         this.syncTimer = setInterval(() => {
-            if (!document.hidden) this.sync();
+            if (!document.hidden || this.heartbeatDue()) this.sync();
         }, SYNC_INTERVAL_MS);
+    },
+
+    heartbeatDue() {
+        return this.now() - (Number(this.state.seen[this.playerName]) || 0) >= HEARTBEAT_MS;
     },
 
     stopSync() {
@@ -792,6 +962,7 @@ const flipApp = {
         try {
             do {
                 this.syncAgain = false;
+                if (this.playerName && this.heartbeatDue()) this.state.seen[this.playerName] = this.now();
                 let server = await this.fetchState();
                 if (server === undefined || roomId !== this.roomId) break;
                 let merged = mergeState(this.state, server);
@@ -804,6 +975,7 @@ const flipApp = {
                 merged = mergeState(this.state, merged);
                 const changedLocal = canon(merged) !== canon(normalize(this.state));
                 this.state = merged;
+                if (this.checkRemoved()) break;
                 if (changedLocal && this.phase === 'room') this.render();
             } while (this.syncAgain);
         } finally {

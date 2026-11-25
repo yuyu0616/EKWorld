@@ -7,7 +7,7 @@
  */
 (function (root) {
     function emptyState() {
-        return { round: 1, question: null, stage: null, players: {}, reveal: {} };
+        return { round: 1, question: null, stage: null, owner: null, players: {}, reveal: {}, seen: {} };
     }
 
     function normalize(s) {
@@ -17,8 +17,10 @@
             round: Number(s.round) || 1,
             question: s.question && typeof s.question === 'object' ? s.question : null,
             stage: s.stage && typeof s.stage === 'object' ? s.stage : null,
+            owner: s.owner && typeof s.owner === 'object' ? s.owner : null,
             players: s.players && typeof s.players === 'object' ? s.players : {},
-            reveal: s.reveal && typeof s.reveal === 'object' ? s.reveal : {}
+            reveal: s.reveal && typeof s.reveal === 'object' ? s.reveal : {},
+            seen: s.seen && typeof s.seen === 'object' ? s.seen : {}
         };
     }
 
@@ -67,12 +69,20 @@
                 players[k] = { ...p, kind: 'text', answer: '', drawing: null, submitted: false };
             }
         });
+        // 最後に画面を開いていた時刻 (オンライン判定用) は大きい方を採用
+        // players とは別に持つので、削除 (left) を上書きしてしまうことがない
+        const seen = {};
+        new Set([...Object.keys(a.seen), ...Object.keys(b.seen)]).forEach(k => {
+            seen[k] = Math.max(Number(a.seen[k]) || 0, Number(b.seen[k]) || 0);
+        });
         return {
             round,
             question: lww(a.question, b.question),
             stage: lwwRound(a.stage, b.stage),
+            owner: lww(a.owner, b.owner),
             players,
-            reveal
+            reveal,
+            seen
         };
     }
 

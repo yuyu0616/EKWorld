@@ -496,6 +496,9 @@
             gap: 8px;
         }
         .member-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
             padding: 6px 14px;
             border-radius: 50px;
             border: 2px solid var(--line-strong);
@@ -505,6 +508,32 @@
         }
         .member-chip.ok { background: var(--accent); color: var(--text-color); }
         .member-chip.me { border-color: var(--secondary); }
+        .member-chip.removable { padding-right: 6px; }
+        .member-chip.offline { opacity: 0.6; border-style: dashed; }
+        .remove-btn {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(64, 58, 77, 0.10);
+            color: var(--text-color);
+            font-size: 12px;
+            font-weight: 900;
+            line-height: 1;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transition: background 0.15s, color 0.15s;
+        }
+        .remove-btn:hover { background: #ef4444; color: var(--white); }
+        .member-note {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--muted);
+            margin: 10px 0 0;
+        }
 
         @media (max-width: 480px) {
             .cards-grid { gap: 12px; }
@@ -565,6 +594,8 @@
             <div class="flip-panel">
                 <h3>参加しているメンバー（<span id="member-count"></span>人）</h3>
                 <ul class="member-list" id="member-list"></ul>
+                <p class="member-note" id="member-note"></p>
+                <button class="btn btn-sm" id="remove-offline-btn" style="background-color: #94a3b8; margin-top: 12px;" hidden></button>
             </div>
         </section>
 
@@ -629,6 +660,7 @@
                     <button class="btn btn-sm" id="reveal-all-btn" style="background-color: var(--primary);">一斉にオープン！</button>
                     <button class="btn btn-sm" id="hide-all-btn" style="background-color: #94a3b8;">全部ふせる</button>
                     <button class="btn btn-sm" id="fullscreen-btn" style="background-color: #64748b;">⛶ 全画面</button>
+                    <button class="btn btn-sm" id="save-board-btn" style="background-color: var(--mint);">💾 画像で保存</button>
                 </div>
                 <p class="progress-text" style="font-size: 13px; margin-top: 12px;">カードをタップでオープン、オープン済みのカードをタップで大きく表示</p>
                 <div class="cards-grid" id="cards-grid"></div>
@@ -653,6 +685,7 @@
             <button class="zoom-nav" id="zoom-next" title="次へ">▶</button>
         </div>
         <div class="zoom-bar">
+            <button class="btn btn-sm" id="zoom-save" style="background-color: var(--mint);">💾 画像で保存</button>
             <button class="btn btn-sm" id="zoom-hide" style="background-color: #94a3b8;">このカードをふせる</button>
             <button class="btn btn-sm" id="zoom-close" style="background-color: var(--primary);">とじる ✕</button>
         </div>
@@ -662,6 +695,7 @@
 
     <script src="flip_merge.js"></script>
     <script src="flip_draw.js"></script>
+    <script src="flip_image.js"></script>
     <script src="flip.js"></script>
 </body>
 </html>
