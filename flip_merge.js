@@ -7,13 +7,14 @@
  */
 (function (root) {
     function emptyState() {
-        return { round: 1, question: null, stage: null, owner: null, players: {}, reveal: {}, seen: {} };
+        return { gen: 0, round: 1, question: null, stage: null, owner: null, players: {}, reveal: {}, seen: {} };
     }
 
     function normalize(s) {
         const base = emptyState();
         if (!s || typeof s !== 'object') return base;
         return {
+            gen: Number(s.gen) || 0,
             round: Number(s.round) || 1,
             question: s.question && typeof s.question === 'object' ? s.question : null,
             stage: s.stage && typeof s.stage === 'object' ? s.stage : null,
@@ -52,9 +53,21 @@
         return out;
     }
 
+    /**
+     * gen はルームの「何代目か」。全員がいなくなってルームを作り直すたびに 1 増える。
+     * 代が違う場合は新しい代の状態だけを残す (古い画面から前の状態が復活しないように)
+     */
     function mergeState(x, y) {
         const a = normalize(x);
         const b = normalize(y);
+        if (a.gen !== b.gen) {
+            const newer = a.gen > b.gen ? a : b;
+            return mergeSameGen(newer, newer);
+        }
+        return mergeSameGen(a, b);
+    }
+
+    function mergeSameGen(a, b) {
         const round = Math.max(a.round, b.round);
         const reveal = mergeMaps(a.reveal, b.reveal);
         // 古いラウンドのオープン情報は不要なので捨てる
@@ -76,6 +89,7 @@
             seen[k] = Math.max(Number(a.seen[k]) || 0, Number(b.seen[k]) || 0);
         });
         return {
+            gen: a.gen,
             round,
             question: lww(a.question, b.question),
             stage: lwwRound(a.stage, b.stage),
