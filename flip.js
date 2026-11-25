@@ -76,6 +76,16 @@ const flipApp = {
         return players.some(p => p.name === stored) ? stored : players[0].name;
     },
 
+    // 自分以外で、ルームに残っていて画面を開いている人
+    othersOnline() {
+        return this.activePlayers().filter(p => p.name !== this.playerName && this.isOnline(p.name));
+    },
+
+    // まっさらなルーム (代を1つ進めるので、古い状態は復活しない)
+    freshRoomState() {
+        return { ...emptyState(), gen: (this.state.gen || 0) + 1 };
+    },
+
     isOwner() {
         return this.ownerName() === this.playerName;
     },
@@ -740,6 +750,13 @@ const flipApp = {
         }
 
         this.state = mergeState(emptyState(), server);
+        // 中に誰もいない (全員が退出・オフライン) ルームは、第1問から作り直す
+        // ただし、自分がついさっきまでいた (リロードなど) 場合はそのまま続ける
+        const mine = this.state.players[name];
+        const justHere = mine && !mine.left && this.now() - (Number(this.state.seen[name]) || 0) < OFFLINE_AFTER_MS;
+        if (server && !justHere && this.othersOnline().length === 0) {
+            this.state = this.freshRoomState();
+        }
         const prev = this.state.players[name];
         const t = this.now();
         if (prev && !prev.left) {
@@ -802,7 +819,11 @@ const flipApp = {
     // 他の人に削除されたら、入室画面に戻す
     checkRemoved() {
         const me = this.me();
-        if (this.phase !== 'room' || !me || !me.left) return false;
+        if (this.phase !== 'room' || (me && !me.left)) return false;
+        // 自分の情報が消えている = 全員がいなくなってルームが作り直された
+        const message = me
+            ? 'ルームから削除されました。\nもう一度入室すると参加できます。'
+            : 'しばらく誰もいなかったため、ルームがリセットされました。\nもう一度入室すると第1問から始まります。';
         this.stopSync();
         this.closeZoom();
         if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
@@ -811,7 +832,7 @@ const flipApp = {
         this.state = emptyState();
         this.render();
         this.setSyncStatus('オフライン');
-        alert('ルームから削除されました。\nもう一度入室すると参加できます。');
+        alert(message);
         return true;
     },
 
@@ -819,7 +840,10 @@ const flipApp = {
         if (!confirm('ルームから退出しますか？')) return;
         this.stopSync();
         const me = this.me();
-        if (me) {
+        if (me && this.othersOnline().length === 0) {
+            // 最後の1人が抜けるときは、ルームを空にして第1問からにする
+            await this.pushState(this.freshRoomState());
+        } else if (me) {
             const t = this.now();
             this.state.players[this.playerName] = { ...me, left: true, at: t };
             // 部屋主が抜けるときは、次の人に部屋主を渡す
